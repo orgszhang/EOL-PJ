@@ -16,7 +16,7 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
-
+//123
 public class NetPortListener extends Thread {
     private static final Log logger = LogFactory.getLog(NetPortListener.class);
     ServerSocket server = null;
