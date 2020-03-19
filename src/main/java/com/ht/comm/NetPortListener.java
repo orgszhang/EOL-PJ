@@ -24,6 +24,7 @@ public class NetPortListener extends Thread {
     JTextField codeField=null;
     JTextField qcField=null;
     JTextField temp=null;
+
     public NetPortListener(int port, JSONObject jsonObject) {
         try {
             server = new ServerSocket(port);
