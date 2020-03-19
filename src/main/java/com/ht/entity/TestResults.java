@@ -1,9 +1,6 @@
 package com.ht.entity;
 
-
-
 import javax.persistence.*;
-
 import java.util.Date;
 
 @Entity
@@ -26,29 +23,29 @@ public class TestResults {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name="VisualPartNumber")
+    @Column(name = "VisualPartNumber")
     private String visualPartNumber;
 
-    @Column(name="MainCurr")
+    @Column(name = "MainCurr")
     private double mainCurr;
-    @Column(name="V25")
+    @Column(name = "V25")
     private double v25;
-    @Column(name="R25")
+    @Column(name = "R25")
     private double r25;
-    @Column(name="V16")
+    @Column(name = "V16")
     private double v16;
-    @Column(name="R16")
+    @Column(name = "R16")
     private double r16;
-    @Column(name="ResistorOK")
+    @Column(name = "ResistorOK")
     private boolean resistorOK;
 
-    @Column(name="RNTC")
+    @Column(name = "RNTC")
     private double ntcR;
-    @Column(name="TNTC")
+    @Column(name = "TNTC")
     private double ntcT;
-    @Column(name="NTCOK")
+    @Column(name = "NTCOK")
     private boolean NTC_OK;
-    @Column(name="TestTime")
+    @Column(name = "TestTime")
     private Date testTime;
 
     public long getId() {
