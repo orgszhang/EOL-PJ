@@ -1,18 +1,96 @@
 package com.ht.jna;
 
-
+import com.ht.base.SpringContext;
+import com.ht.entity.LatestQRCodes;
 import com.ht.entity.ProRecords;
 import com.ht.entity.TestResults;
-
-import com.ht.swing.TestConstant;
+import com.ht.repository.LatestQRCodeRepo;
+import com.ht.repository.ProRecordsRepo;
+import com.ht.repository.TestResultsRepo;
+import com.ht.utils.TestConstant;
+import com.ht.utils.QRCodeGenerator;
+import com.ht.utils.TempCalculator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Optional;
 
 public class KeySightManager {
     private static final Log logger = LogFactory.getLog(KeySightManager.class);
+
+    KeySightDevice_Voltage keySightDeviceVoltage;
+    KeySightDevice_Voltage16 keySightDeviceVoltage16;
+    KeySightDevice_Electricity keySightDeviceElectricity;
+    KeySightDevice_NTC keySightDeviceNtc;
+
+    public static void main(String[] args) {
+        double cirTemp = 15; // 环境温度
+        String resistorID = "20203010282";
+        String key = "11D915743";
+
+        KeySightManager manager = new KeySightManager();
+        manager.initDevices();
+        TestResults result = manager.driveDevices(resistorID, cirTemp);
+        manager.closeDivices();
+    }
+
+    public void initDevices() {
+        //每一个六位半对应一个class
+        keySightDeviceVoltage = new KeySightDevice_Voltage();
+        keySightDeviceVoltage16 = new KeySightDevice_Voltage16();
+        keySightDeviceElectricity = new KeySightDevice_Electricity();
+        keySightDeviceNtc = new KeySightDevice_NTC();
+
+        //分别打开三台设备
+        keySightDeviceVoltage.open();
+        keySightDeviceVoltage16.open();
+        keySightDeviceElectricity.open();
+        keySightDeviceNtc.open();
+
+
+        //分别设置设备的量程
+        keySightDeviceVoltage.setVolCONF();
+        keySightDeviceVoltage16.setVolCONF();
+        keySightDeviceElectricity.setEleCONF();
+        keySightDeviceNtc.setRCONF();
+    }
+
+    public void closeDivices() {
+        //读取完成后关闭设备
+        keySightDeviceVoltage.close();
+        keySightDeviceElectricity.close();
+        keySightDeviceNtc.close();
+    }
+
+    public TestResults driveDevices(String visualPartNumber, double cirTemp) {
+        double Electricity; //电流
+        double Voltage; //电压
+        double voltagev16;  //电压
+        double NTC; //NTC电阻
+
+        logger.info("Before reading " + visualPartNumber + "'s data, let's sleep 1 second...");
+        try {
+            Thread.sleep(1 * 1000);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //分别发送指令通知六位半需要读取数据
+        keySightDeviceVoltage.writeCmd("READ?");
+        keySightDeviceVoltage16.writeCmd("READ?");
+        keySightDeviceElectricity.writeCmd("READ?");
+        keySightDeviceNtc.writeCmd("READ?");
+
+        //分别从三台设备读取数值，取到值后可以根据需求组成不同的数据结构，这里我就不写了
+        Voltage = Double.valueOf(keySightDeviceVoltage.readResult());
+        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult());
+        Electricity = Double.valueOf(keySightDeviceElectricity.readResult());
+        NTC = Double.valueOf(keySightDeviceNtc.readResult());
+
+        return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp);
+    }
 
     public TestResults pseudoDriveDevices(String visualPartNumber, double cirTemp) {
         double Electricity = Math.random()/10 + 4.3; //电流
@@ -34,15 +112,15 @@ public class KeySightManager {
         result.setV16(voltagev16);
         result.setR16(voltagev16 / Electricity * 1000);  // 16 rw
 
-        if ((Math.abs(r25 - 75)/ 75) <= 0.03) {
+        if ((Math.abs(r25 - TestConstant.RESISTOR_EXP)/ TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE) {
             result.setResistorOK(true);
         } else {
             result.setResistorOK(false);
         }
 
         result.setNtcR(NTC);
-        result.setNtcT(QCalTemp(NTC));
-        if (Math.abs(QCalTemp(NTC) - cirTemp) <= 5) {
+        result.setNtcT(TempCalculator.QCalTemp(NTC));
+        if (Math.abs(TempCalculator.QCalTemp(NTC) - cirTemp) <= TestConstant.TEMP_GAP) {
             result.setNTC_OK(true);
         } else {
             result.setNTC_OK(false);
@@ -50,6 +128,13 @@ public class KeySightManager {
 
         result.setTestTime(Calendar.getInstance().getTime());
 
+        logger.info("ProRecords save: " + result.toString());
+        try {
+            TestResultsRepo rRepo = SpringContext.getBean(TestResultsRepo.class);
+            rRepo.save(result);
+        } catch (Exception e) {
+            logger.error("Save ProRecordsRepo to DB error. ", e);
+        }
 
         return result;
     }
@@ -67,9 +152,9 @@ public class KeySightManager {
 
         // 循环Test_Time次
         // 按ResistorID和maskID，获得一次Run
-        for (int i = 0; i < 10; i++) {
-            TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
-            // TestResults oneTest = driveDevices(visualPartNumber, cirTemp);
+        for (int i = 0; i < TestConstant.TEST_TIMES; i++) {
+            // TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
+            TestResults oneTest = driveDevices(visualPartNumber, cirTemp);
             r25 = r25 + oneTest.getR25();
             r16 = r16 + oneTest.getR16();
             rntc = rntc + oneTest.getNtcR();
@@ -85,10 +170,10 @@ public class KeySightManager {
         thePart.setR25(avgR25);
         thePart.setR16(avgR16);
         thePart.setRntc(avgRntc);
-        thePart.setTntc(QCalTemp(avgRntc));
+        thePart.setTntc(TempCalculator.QCalTemp(avgRntc));
 
         if (judgeResistor && judgeNTC) {
-            thePart.setProCode(getQRcode());
+            thePart.setProCode(maintainQRCode(visualPartNumber));
         } else {
             thePart.setProCode(null);
         }
@@ -96,29 +181,38 @@ public class KeySightManager {
 
         thePart.setComments(resistorID);
 
+        ProRecordsRepo repo = SpringContext.getBean(ProRecordsRepo.class);
+        repo.save(thePart);
+
         return thePart;
     }
 
-    private double QCalTemp(double d) {
-        return (25 * (1 - Math.random() / 100));
-    }
+    private String maintainQRCode(String visualPartNumber) {
+        String factoryID = null;
+        if (visualPartNumber.startsWith("D")) {
+            factoryID = TestConstant.SVW;
+        } else if (visualPartNumber.startsWith("G")) {
+            factoryID = TestConstant.FAW;
+        }
 
-    private String getQRcode() {
-        String[] QRCodes = new String[] {
-                "#11D222333  000###*AAA 999 000001D*#",
-                "#11D222333  000###*AAA 999 000509T*#",
-                "#11D222333  000###*AAA 999 078903X*#",
-                "#11D222333  000###*AAA 999 030678Y*#",
-                "#11D222333  000###*AAA 999 129753V*#",
+        logger.info("getLatestQRCodeByFactoryID start : " + factoryID);
+        String nextBarCode = null;
+        try {
+            LatestQRCodeRepo repo = SpringContext.getBean(LatestQRCodeRepo.class);
+            Optional<LatestQRCodes> oneRow = repo.findById(factoryID);
+            String lastQR = oneRow.get().getLatestQRCode();
 
-                "#11G222333  000###*AAA 999 892437M*#",
-                "#11G222333  000###*AAA 999 125894W*#",
-                "#11G222333  000###*AAA 999 751369O*#",
-                "#11G222333  000###*AAA 999 882319C*#",
-                "#11G222333  000###*AAA 999 236578P*#",
-        };
+            String s = QRCodeGenerator.getSeqNumber(lastQR);
+            nextBarCode = QRCodeGenerator.calQRCode(factoryID, s);
 
-        int i = (int)(Math.random() * 10);        ;
-        return QRCodes[i];
+            LatestQRCodes lqrc = new LatestQRCodes();
+            lqrc.setLatestQRCode(nextBarCode);
+            lqrc.setCustomerPartNo(factoryID);
+            repo.save(lqrc);
+        } catch (Exception e) {
+            logger.error("Cannot find the latest QR code --> " + factoryID, e);
+        }
+
+        return nextBarCode;
     }
 }
