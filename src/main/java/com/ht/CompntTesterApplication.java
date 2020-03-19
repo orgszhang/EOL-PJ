@@ -26,6 +26,6 @@ public class CompntTesterApplication {
     @Bean
     public MainFrame mainFrame() {
         logger.info("hi... i'am starting ... ");
-        return new MainFrame(null,null);
+        return new MainFrame();
     }
 }

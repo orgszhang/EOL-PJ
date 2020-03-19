@@ -66,7 +66,7 @@ public class NetPortListener extends Thread {
                     codeField.setText(jsonObject.getString("code"));
                     qcField.setText(jsonObject.getString("qc"));
                     KeySightManager keySightManager=new KeySightManager();
-                    keySightManager.testThePart(jsonObject.getString("code"),Integer.valueOf(jsonObject.get("textFieldTemp").toString()),jsonObject.getString("qc"));
+                    keySightManager.testThePart(jsonObject.getString("code"),Double.valueOf(temp.getText()),jsonObject.getString("qc"));
                     this.notify();
                 }
 

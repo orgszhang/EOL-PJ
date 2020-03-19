@@ -1,6 +1,7 @@
 package com.ht.swing;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.ht.comm.NetPortListener;
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
@@ -520,7 +521,11 @@ public class PanelsEOL extends JPanel implements ActionListener {
             logger.info("测试开始...");
             if (!checkInput()) return;
             testStartButton.setText(UIConstant.NETPORT_CLOSE);
-            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), visualPartNumber, textFieldResistorsID);
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("textFieldTemp",textFieldTemp);
+            jsonObject.put("visualPartNumber",visualPartNumber);
+            jsonObject.put("textFieldResistorsID",textFieldResistorsID);
+            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()),jsonObject);
             mainPLCListener.start();
             mDataView.append(new Date() + "：网口已打开，可以接收数据......" + getStatus() + "\r\n");
 
