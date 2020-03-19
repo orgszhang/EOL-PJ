@@ -10,22 +10,22 @@ import java.awt.*;
 public final class UIConstant {
     static final String APP_NAME = "HTSS EOL Tester";
     static final String RESET_BUTTON = "全部重置";
-    static final String NETPORT_OPEN = "打开网口";
-    static final String NETPORT_CLOSE = "关闭网口";
-    // static final String VERIFY_QRCODE_BUTTON = "验证二维码";
+    static final String NETPORT_OPEN = "开始测试";
+    static final String NETPORT_CLOSE = "结束测试";
+
+    static final double TEST_TEMP = 23d;
 
     static final String LABEL_TO_GENERATE = "待生成";
     static final String LABEL_TO_TEST = "待检测";
 
-    static final String LABEL_DEVICE_CONFIG = "查看设备网络配置";
+    // static final String LABEL_DEVICE_CONFIG = "查看设备网络配置";
 
     static final String EMPTY_STRING = "";
-
-
 
     public static final Font TITLE_FONT = new Font("微软雅黑", Font.BOLD, 28);
     public static final Font AREA_FONT = new Font("微软雅黑", Font.BOLD, 22);
     public static final Font TEXT_FONT = new Font("微软雅黑", Font.BOLD, 16);
+    public static final Font STATUS_FONT = new Font("微软雅黑", Font.BOLD, 12);
     public static final Font COPYRIGHT_FONT = new Font("微软雅黑", Font.BOLD, 10);
 
     public static final Color DARK_GREEN = new Color(0,153, 0);
@@ -54,5 +54,4 @@ public final class UIConstant {
     public static String formatTemperature(double input) {
         return TEMPERATURE + EQUAL + String.format("%.1f", input) + UNIT_TEMPERATURE;
     }
-
 }
