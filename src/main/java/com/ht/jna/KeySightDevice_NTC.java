@@ -5,12 +5,6 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-
-import java.io.FileInputStream;
-import java.io.InputStream;
 
 
 public class KeySightDevice_NTC {
