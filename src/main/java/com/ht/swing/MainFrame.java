@@ -1,6 +1,6 @@
 package com.ht.swing;
 
-import com.ht.Socket.EolServer;
+import com.ht.jna.KeySightManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.StopWatch;
@@ -8,6 +8,8 @@ import org.springframework.util.StopWatch;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.InputStream;
 
 
@@ -17,8 +19,10 @@ import java.io.InputStream;
  * https://coolsymbol.com/
  */
 
-public class MainFrame {
+public class MainFrame extends JFrame {
     private static final Log logger = LogFactory.getLog(MainFrame.class);
+
+
 
     private JFrame mainFrame;
 
@@ -38,13 +42,22 @@ public class MainFrame {
             logger.error("Cannot find logo image ...", e);
         }
 
-        // PanelsVDB pvt = new PanelsVDB();
+        PanelsVDB pvt = new PanelsVDB();
         // PanelsV3 pvt = new PanelsV3();
-        PanelsEOL pvt = new PanelsEOL();
+        // PanelsEOL pvt = new PanelsEOL();
+        pvt.getManager().initDevices();
         Container contentPane = mainFrame.getContentPane();
         contentPane.add(pvt);
+
         mainFrame.setVisible(true);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        this.addWindowListener(new WindowAdapter() {
+                                   public void windowClosing(WindowEvent e) {
+                                       System.out.println("触发windowClosing事件");
+                                       pvt.getManager().closeDivices();
+                                   }
+                               });
 
         stopWatch.stop();
         logger.info("Init KickOff down in " + stopWatch.getTotalTimeMillis() / 1000.0 + " seconds.");
