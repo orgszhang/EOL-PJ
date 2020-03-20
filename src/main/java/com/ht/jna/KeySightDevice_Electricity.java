@@ -5,24 +5,15 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-
-import java.io.FileInputStream;
-import java.io.InputStream;
-
 
 public class KeySightDevice_Electricity {
     private static final Log logger = LogFactory.getLog(KeySightDevice_Electricity.class);
-
+    LongByReference defaultSession;
+    LongByReference vipSession;
     private KeySightVci KEYSIGHTINSTANCE;
-
     private boolean isOpened = false;
     private boolean isSetVol = false;
     private boolean isSetEle = false;
-    LongByReference defaultSession;
-    LongByReference vipSession;
     private LongByReference VI_ATTR_SUPPRESS_END_EN;
     private LongByReference VI_ATTR_TERMCHAR_EN;
 
@@ -59,7 +50,7 @@ public class KeySightDevice_Electricity {
                 return false;
             }
             vipSession = new LongByReference(0);
-            String cmd = "TCPIP0::"+eleIp+"::inst0::INSTR";
+            String cmd = "TCPIP0::" + eleIp + "::inst0::INSTR";
             // String cmd = "TCPIP0::192.168.0.120::5024::SOCKET";
             // String cmd = "USB0::0x2A8D::0x1301::MY59000220::0::INSTR";
             NativeLong a = new NativeLong(defaultSession.getValue());
@@ -68,7 +59,7 @@ public class KeySightDevice_Electricity {
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
                 return false;
             }
-            logger.info("连接ip="+eleIp+"的设备成功");
+            logger.info("连接ip=" + eleIp + "的设备成功");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -98,10 +89,7 @@ public class KeySightDevice_Electricity {
         NativeLong a = new NativeLong(vipSession.getValue());
         NativeLong end = new NativeLong(VI_ATTR_SUPPRESS_END_EN.getValue());
         int result = KEYSIGHTINSTANCE.viSetAttribute(a, end, "VI_TRUE");
-        if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            return false;
-        }
-        return true;
+        return result == KEYSIGHTINSTANCE.STATUS_OK;
     }
 
     public Boolean VI_ATTR_TERMCHAR_EN() {
@@ -109,10 +97,7 @@ public class KeySightDevice_Electricity {
         NativeLong a = new NativeLong(vipSession.getValue());
         NativeLong end = new NativeLong(VI_ATTR_TERMCHAR_EN.getValue());
         int result = KEYSIGHTINSTANCE.viSetAttribute(a, end, "VI_TRUE");
-        if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            return false;
-        }
-        return true;
+        return result == KEYSIGHTINSTANCE.STATUS_OK;
     }
 
     public Boolean writeCmd(String cmdStr) {
@@ -121,7 +106,7 @@ public class KeySightDevice_Electricity {
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            logger.warn("执行命令失败,result="+result);
+            logger.warn("执行命令失败,result=" + result);
         }
         return true;
     }
