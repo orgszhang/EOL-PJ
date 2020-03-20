@@ -6,7 +6,7 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
 
 public interface KeySightVci extends Library {
-    String dllName = "D:\\k1\\visa32";
+    String dllName = ".\\libs\\visa32";
     /**
      * 默认的成功
      */

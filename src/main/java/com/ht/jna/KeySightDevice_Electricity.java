@@ -22,7 +22,6 @@ public class KeySightDevice_Electricity {
         KEYSIGHTINSTANCE = KeySightVci.KEYSIGHTINSTANCE;
     }
 
-
     public boolean open() {
         if (isOpened) {
             return true;

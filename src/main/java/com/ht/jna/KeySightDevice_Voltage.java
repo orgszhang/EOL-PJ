@@ -5,12 +5,6 @@ import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-
-import java.io.FileInputStream;
-import java.io.InputStream;
 
 
 public class KeySightDevice_Voltage {
@@ -18,7 +12,7 @@ public class KeySightDevice_Voltage {
 
     LongByReference defaultSession;
     LongByReference vipSession;
-    private KeySightVci_Voltage KEYSIGHTINSTANCE;
+    private KeySightVci KEYSIGHTINSTANCE;
     private boolean isOpened = false;
     private boolean isSetVol = false;
     private boolean isSetEle = false;
@@ -26,9 +20,8 @@ public class KeySightDevice_Voltage {
     private LongByReference VI_ATTR_TERMCHAR_EN;
 
     public KeySightDevice_Voltage() {
-        KEYSIGHTINSTANCE = KeySightVci_Voltage.KEYSIGHTINSTANCE;
+        KEYSIGHTINSTANCE = KeySightVci.KEYSIGHTINSTANCE;
     }
-
 
     public boolean open() {
         System.out.println("KeySightDevice_Voltage open ...");

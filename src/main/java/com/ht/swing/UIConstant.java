@@ -1,6 +1,5 @@
 package com.ht.swing;
 
-import javax.swing.*;
 import java.awt.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -25,7 +24,7 @@ public final class UIConstant {
 
     static final String EMPTY_STRING = "";
 
-
+    static final double TEST_TEMP = 23d;
 
     public static final Font TITLE_FONT = new Font("微软雅黑", Font.BOLD, 28);
     public static final Font AREA_FONT = new Font("微软雅黑", Font.BOLD, 22);

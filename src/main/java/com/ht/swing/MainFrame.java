@@ -1,16 +1,11 @@
 package com.ht.swing;
 
-import com.ht.jna.KeySightManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.util.StopWatch;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.InputStream;
 
 
 /**
@@ -21,8 +16,6 @@ import java.io.InputStream;
 
 public class MainFrame extends JFrame {
     private static final Log logger = LogFactory.getLog(MainFrame.class);
-
-
 
     private JFrame mainFrame;
 
@@ -35,29 +28,22 @@ public class MainFrame extends JFrame {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         mainFrame.setSize(screenSize);
 
+        Image image = null;
         try {
-            InputStream logoImageInputStream = MainFrame.class.getResourceAsStream("/htlogo.png");
-            mainFrame.setIconImage(ImageIO.read(logoImageInputStream));
+            image = Toolkit.getDefaultToolkit().getImage(".\\libs\\htlogo.png");
         } catch (Exception e) {
             logger.error("Cannot find logo image ...", e);
         }
+        mainFrame.setIconImage(image);
 
-        PanelsVDB pvt = new PanelsVDB();
+        // PanelsVDB pvt = new PanelsVDB();
         // PanelsV3 pvt = new PanelsV3();
-        // PanelsEOL pvt = new PanelsEOL();
-        pvt.getManager().initDevices();
+        PanelsEOL pvt = new PanelsEOL();
         Container contentPane = mainFrame.getContentPane();
         contentPane.add(pvt);
 
         mainFrame.setVisible(true);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        this.addWindowListener(new WindowAdapter() {
-                                   public void windowClosing(WindowEvent e) {
-                                       System.out.println("触发windowClosing事件");
-                                       pvt.getManager().closeDivices();
-                                   }
-                               });
 
         stopWatch.stop();
         logger.info("Init KickOff down in " + stopWatch.getTotalTimeMillis() / 1000.0 + " seconds.");

@@ -11,10 +11,10 @@ import javax.persistence.Table;
 public class Devices {
     @Column(name = "Device")
     private String device;
-    @Column(name = "IP_Address")
-    private String ip;
+    @Column(name = "IPAddress")
+    private String ipAddress;
     @Column(name = "PortNumber")
-    private String port;
+    private String portNumber;
 
     @Id
     public String getDevice() {
@@ -25,28 +25,28 @@ public class Devices {
         this.device = device;
     }
 
-    public String getIp() {
-        return ip;
+    public String getIpAddress() {
+        return ipAddress;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 
-    public String getPort() {
-        return port;
+    public String getPortNumber() {
+        return portNumber;
     }
 
-    public void setPort(String port) {
-        this.port = port;
+    public void setPortNumber(String port) {
+        this.portNumber = port;
     }
 
     @Override
     public String toString() {
         return "Devices{" +
                 "device='" + device + '\'' +
-                ", IP_Address='" + ip + '\'' +
-                ", PortNumber='" + port + '\'' +
+                ", IP_Address='" + ipAddress + '\'' +
+                ", PortNumber='" + portNumber + '\'' +
                 '}';
     }
 }

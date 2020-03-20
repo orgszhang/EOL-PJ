@@ -6,22 +6,19 @@ import com.sun.jna.ptr.LongByReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-
 public class KeySightDevice_NTC {
     private static final Log logger = LogFactory.getLog(KeySightDevice_NTC.class);
-
-    private KeySightVic_NTC KEYSIGHTINSTANCE;
-
+    LongByReference defaultSession;
+    LongByReference vipSession;
+    private KeySightVci KEYSIGHTINSTANCE;
     private boolean isOpened = false;
     private boolean isSetVol = false;
     private boolean isSetEle = false;
-    LongByReference defaultSession;
-    LongByReference vipSession;
     private LongByReference VI_ATTR_SUPPRESS_END_EN;
     private LongByReference VI_ATTR_TERMCHAR_EN;
 
     public KeySightDevice_NTC() {
-        KEYSIGHTINSTANCE = KeySightVic_NTC.KEYSIGHTNTC;
+        KEYSIGHTINSTANCE = KeySightVci.KEYSIGHTINSTANCE;
     }
 
 
@@ -44,7 +41,7 @@ public class KeySightDevice_NTC {
                 return false;
             }
             vipSession = new LongByReference(0);
-            String cmd = "TCPIP0::"+rIp+"::inst0::INSTR";
+            String cmd = "TCPIP0::" + rIp + "::inst0::INSTR";
             // String cmd = "TCPIP0::192.168.0.120::5024::SOCKET";
             // String cmd = "USB0::0x2A8D::0x1301::MY59000220::0::INSTR";
             NativeLong a = new NativeLong(defaultSession.getValue());
@@ -53,7 +50,7 @@ public class KeySightDevice_NTC {
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
                 return false;
             }
-            logger.info("连接ip="+rIp+"的设备成功");
+            logger.info("连接ip=" + rIp + "的设备成功");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -101,7 +98,7 @@ public class KeySightDevice_NTC {
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            logger.error("执行命令失败,result="+result);
+            logger.error("执行命令失败,result=" + result);
         }
         return true;
     }
@@ -120,7 +117,7 @@ public class KeySightDevice_NTC {
 
     public boolean setRCONF() {
 
-        if (writeCmd("CONF:RESistance 1000000")&&writeCmd("CONF:RESistance 1000000")) {
+        if (writeCmd("CONF:RESistance 1000000") && writeCmd("CONF:RESistance 1000000")) {
             System.out.println("设置为电阻模式");
             try {
                 Thread.sleep(30);

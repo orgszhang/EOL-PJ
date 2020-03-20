@@ -7,9 +7,9 @@ import com.ht.entity.TestResults;
 import com.ht.repository.LatestQRCodeRepo;
 import com.ht.repository.ProRecordsRepo;
 import com.ht.repository.TestResultsRepo;
-import com.ht.utils.TestConstant;
 import com.ht.utils.QRCodeGenerator;
 import com.ht.utils.TempCalculator;
+import com.ht.utils.TestConstant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -48,7 +48,6 @@ public class KeySightManager {
         keySightDeviceVoltage16.open();
         keySightDeviceElectricity.open();
         keySightDeviceNtc.open();
-
 
         //分别设置设备的量程
         keySightDeviceVoltage.setVolCONF();

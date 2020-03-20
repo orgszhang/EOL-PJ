@@ -2,10 +2,14 @@ package com.ht.swing;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.ht.base.SpringContext;
 import com.ht.comm.NetPortListener;
+import com.ht.entity.Devices;
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
+import com.ht.repository.DevicesRepo;
 import com.ht.utils.TestConstant;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -15,8 +19,11 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.InetAddress;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 2个panel(面板) , 切换
@@ -341,7 +348,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         /************ 状态显示 ***********/
         mDataView.setFocusable(false);
-        mDataView.setFont(UIConstant.STATUS_FONT);
+        mDataView.setFont(UIConstant.TEXT_FONT);
         mDataView.setLineWrap(true);
         JScrollPane jsp2 = new JScrollPane(mDataView, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         jsp2.setPreferredSize(new Dimension(800, 410));
@@ -430,76 +437,77 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         /*devicesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
                 "设备地址", TitledBorder.LEFT, TitledBorder.CENTER, UIConstant.TEXT_FONT));*/
+
+        List<Devices> deviceList = null;
+        try {
+            DevicesRepo repo = SpringContext.getBean(DevicesRepo.class);
+            deviceList = repo.findAll();
+        } catch (Exception e) {
+            logger.error(e);
+        }
+
         //row 1
         JLabel l1 = new HTSSLabel("设备");
+        JPanel p1 = new JPanel(new BorderLayout());
         l1.setFont(UIConstant.TEXT_FONT);
-        devicesPanel.add(l1);
+        p1.setBackground(UIConstant.BGCOLOR_GRAY);
+        p1.add(l1);
+        devicesPanel.add(p1);
         JLabel l2 = new HTSSLabel("地址");
+        JPanel p2 = new JPanel(new BorderLayout());
         l2.setFont(UIConstant.TEXT_FONT);
-        devicesPanel.add(l2);
+        p2.setBackground(UIConstant.BGCOLOR_GRAY);
+        p2.add(l2);
+        devicesPanel.add(p2);
         JLabel l3 = new HTSSLabel("端口");
+        JPanel p3 = new JPanel(new BorderLayout());
         l3.setFont(UIConstant.TEXT_FONT);
-        devicesPanel.add(l3);
+        p3.setBackground(UIConstant.BGCOLOR_GRAY);
+        p3.add(l3);
+        devicesPanel.add(p3);
         JLabel l4 = new HTSSLabel("状态");
+        JPanel p4 = new JPanel(new BorderLayout());
         l4.setFont(UIConstant.TEXT_FONT);
-        devicesPanel.add(l4);
-        //row 2
-        devicesPanel.add(new HTSSLabel("主控PLC"));
-        devicesPanel.add(new HTSSLabel("本地监听"));
-        JPanel jp1 = new JPanel();
-        textFieldMainPLCPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
-        textFieldMainPLCPort.setHorizontalAlignment(0);
-        textFieldMainPLCPort.setText("8888");
-        jp1.add(textFieldMainPLCPort);
-        devicesPanel.add(jp1);
-        devicesPanel.add(new HTSSStatusLabel());
+        p4.setBackground(UIConstant.BGCOLOR_GRAY);
+        p4.add(l4);
+        devicesPanel.add(p4);
 
-        //row 3
-        devicesPanel.add(new HTSSLabel("电源"));
-        devicesPanel.add(new HTSSLabel("169.254.210.22"));
+        devicesPanel.add(new HTSSLabel("本机"));
+        try {
+            InetAddress inetAddress = InetAddress.getLocalHost();
+            String ip = inetAddress.toString();
+            String localhost = StringUtils.substringAfterLast(ip, "/");
+            devicesPanel.add(new HTSSLabel(localhost));
+        } catch (Exception e) {
+            devicesPanel.add(new HTSSLabel("localhost"));
+        }
         devicesPanel.add(new JLabel());
         devicesPanel.add(new HTSSStatusLabel());
 
-        //row 4
-        devicesPanel.add(new HTSSLabel("电流"));
-        devicesPanel.add(new HTSSLabel("169.254.210.1"));
-        devicesPanel.add(new JLabel());
-        devicesPanel.add(new HTSSStatusLabel());
+        deviceList.forEach(item -> {
+            devicesPanel.add(new HTSSLabel(item.getDevice()));
+            devicesPanel.add(new HTSSLabel(item.getIpAddress()));
 
-        //row 5
-        devicesPanel.add(new HTSSLabel("电压I"));
-        devicesPanel.add(new HTSSLabel("169.254.210.2"));
-        devicesPanel.add(new JLabel());
-        devicesPanel.add(new HTSSStatusLabel());
+            if ("MainPLC".equals(item.getDevice())) {
+                JPanel jp1 = new JPanel(new GridBagLayout());
+                textFieldMainPLCPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
+                textFieldMainPLCPort.setHorizontalAlignment(0);
+                textFieldMainPLCPort.setText(item.getPortNumber());
+                jp1.add(textFieldMainPLCPort);
+                devicesPanel.add(jp1);
+            } else if ("LaserMarking".equals(item.getDevice())) {
+                JPanel jp2 = new JPanel(new GridBagLayout());
+                textFieldLaserPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
+                textFieldLaserPort.setHorizontalAlignment(0);
+                textFieldLaserPort.setText(item.getPortNumber());
+                jp2.add(textFieldLaserPort);
+                devicesPanel.add(jp2);
+            } else {
+                devicesPanel.add(new HTSSLabel(item.getPortNumber()));
+            }
 
-        //row 6
-        devicesPanel.add(new HTSSLabel("电压II"));
-        devicesPanel.add(new HTSSLabel("169.254.210.3"));
-        devicesPanel.add(new JLabel());
-        devicesPanel.add(new HTSSStatusLabel());
-
-        //row 7
-        devicesPanel.add(new HTSSLabel("电阻"));
-        devicesPanel.add(new HTSSLabel("169.254.210.4"));
-        devicesPanel.add(new JLabel());
-        devicesPanel.add(new HTSSStatusLabel());
-
-        //row 8
-        devicesPanel.add(new HTSSLabel("激光打标"));
-        devicesPanel.add(new HTSSLabel("本地监听"));
-        JPanel jp2 = new JPanel();
-        textFieldLaserPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
-        textFieldLaserPort.setHorizontalAlignment(0);
-        textFieldLaserPort.setText("8082");
-        jp2.add(textFieldLaserPort);
-        devicesPanel.add(jp2);
-        devicesPanel.add(new HTSSStatusLabel());
-
-        //row 9
-        devicesPanel.add(new HTSSLabel("数据库"));
-        devicesPanel.add(new HTSSLabel("169.254.210.65"));
-        devicesPanel.add(new HTSSLabel("1043"));
-        devicesPanel.add(new HTSSStatusLabel());
+            devicesPanel.add(new HTSSStatusLabel());
+        });
 
         return devicesPanel;
     }
@@ -528,15 +536,22 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("textFieldResistorsID",textFieldResistorsID);
             mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()),jsonObject);
             mainPLCListener.start();
-            mDataView.append(new Date() + "：网口已打开，可以接收数据......" + getStatus() + "\r\n");
-
+            mDataView.append(formatInfo("网口已打开，可以接收数据......" + getStatus()));
         } else if (actionCommand.equals(UIConstant.NETPORT_CLOSE)) {
             mainPLCListener.closePort();
-            mDataView.append(new Date() + "：网口已关闭......" + getStatus() + "\r\n");
+            mDataView.append(formatInfo("网口已关闭......" + getStatus()));
             testStartButton.setText(UIConstant.NETPORT_OPEN);
         } else {
             logger.error("something wrong boy..." + actionCommand);
         }
+    }
+
+    private String formatInfo(String s) {
+        String result = "";
+        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        result = result + f.format(new Date())
+                + " - " + s + "\r\n";
+        return result;
     }
 
     private void Test() {
@@ -582,7 +597,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             labelResultTwo.setForeground(Color.red);
         }
 
-        mDataView.append("测试结束......" + new Date() + "\r\n");
+        mDataView.append(formatInfo("测试结束......"));
         // logger.info("result testResultVo is: " + part);
         testStartButton.setEnabled(true);
     }
@@ -603,34 +618,42 @@ public class PanelsEOL extends JPanel implements ActionListener {
     }
 
     private boolean checkInput() {
-        String netPort = textFieldMainPLCPort.getText();
+        String mainPort = textFieldMainPLCPort.getText();
         try {
-            Integer i = Integer.parseInt(netPort);
-            // mDataView.append("网络端口" + netPort + "准备打开......" + "\r\n");
+            Integer i = Integer.parseInt(mainPort);
+            // mDataView.append("网络端口" + mainPort + "准备打开......" + "\r\n");
         } catch (Exception exp) {
-            mDataView.append("网络端口" + netPort + "输入有误，请重新输入！" + "\r\n");
+            mDataView.append(formatInfo("主控通信端口" + mainPort + "输入有误，请重新输入！"));
             return false;
         }
 
+        String laserPort = textFieldMainPLCPort.getText();
+        try {
+            Integer i = Integer.parseInt(laserPort);
+            // mDataView.append("网络端口" + laserPort + "准备打开......" + "\r\n");
+        } catch (Exception exp) {
+            mDataView.append(formatInfo("激光打码机通信端口" + laserPort + "输入有误，请重新输入！"));
+            return false;
+        }
 
         String cirTemp = textFieldTemp.getText();
         try {
             double d = Double.parseDouble(cirTemp);
             if (d < 15) {
-                mDataView.append("Error: 环境温度" + cirTemp + "<15°C，过低！" + "\r\n");
+                mDataView.append(formatInfo("环境温度" + cirTemp + "<15°C，过低！"));
                 return false;
             } else if (d > 35) {
-                mDataView.append("Error: 环境温度" + cirTemp + ">35°C，过高！" + "\r\n");
+                mDataView.append(formatInfo("环境温度" + cirTemp + ">35°C，过高！"));
                 return false;
             }
         } catch (Exception exp) {
-            mDataView.append("Error: 环境温度值输入错误！" + "\r\n");
+            mDataView.append(formatInfo("环境温度值输入错误！"));
             return false;
         }
 
         String vPartStart = textFieldeolStatus.getText();
         if (1 == 1) {
-            mDataView.append("状态:" + eolStatus.get() + "\r\n");
+            mDataView.append(formatInfo("状态:" + eolStatus.get()));
         }
 
         return true;
