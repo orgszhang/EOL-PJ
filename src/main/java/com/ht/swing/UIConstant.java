@@ -20,7 +20,7 @@ public final class UIConstant {
     static final String LABEL_TO_GENERATE = "待生成";
     static final String LABEL_TO_TEST = "待检测";
 
-    static final String LABEL_DEVICE_CONFIG = "查看设备网络配置";
+    // static final String LABEL_DEVICE_CONFIG = "查看设备网络配置";
 
     static final String EMPTY_STRING = "";
 
@@ -45,9 +45,12 @@ public final class UIConstant {
     public static final Color BGCOLOR_BLUE = new Color(0, 173, 232);
     public static final Color BGCOLOR_GRAY = new Color(160, 160, 160);
 
+    public static final int SCREEN_WIDTH = 1000;
+
+
     //
     public static String formatDeltaR(double input) {
-        return DELTA_R + EQUAL + String.format("%.4f", input/100) + PERCENT;
+        return DELTA_R + EQUAL + String.format("%.4f", input / 100) + PERCENT;
     }
 
     public static String formatTemperature(int input) {
