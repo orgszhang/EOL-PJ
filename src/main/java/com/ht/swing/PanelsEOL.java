@@ -1,6 +1,5 @@
 package com.ht.swing;
 
-
 import com.alibaba.fastjson.JSONObject;
 import com.ht.base.SpringContext;
 import com.ht.comm.NetPortListener;
@@ -136,7 +135,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         titlePanel.setLayout(new FlowLayout());
 
         JLabel iconLabel = new JLabel();
-        ImageIcon icon = new ImageIcon("src/main/resources/htlogo.png");
+        ImageIcon icon = new ImageIcon("libs\\htlogo.png");
         icon.setImage(icon.getImage().getScaledInstance(50, 50, Image.SCALE_DEFAULT));
         iconLabel.setIcon(icon);
         titlePanel.add(iconLabel);
@@ -521,25 +520,48 @@ public class PanelsEOL extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         final String actionCommand = e.getActionCommand();
         if (actionCommand.equals(UIConstant.RESET_BUTTON)) {
+            // TODO: 应该先停止所有测试，然后再清空相应字段，重置设备和按钮
+
             mDataView.setText(UIConstant.EMPTY_STRING);
+            visualPartNumber.setText(UIConstant.EMPTY_STRING);
             textFieldResistorsID.setText(UIConstant.EMPTY_STRING);
-            testStartButton.setEnabled(true);
+
             FrameReset();
         } else if (actionCommand.equals(UIConstant.NETPORT_OPEN)) {
             FrameReset();
             logger.info("测试开始...");
             if (!checkInput()) return;
-            testStartButton.setText(UIConstant.NETPORT_CLOSE);
-            JSONObject jsonObject=new JSONObject();
-            jsonObject.put("textFieldTemp",textFieldTemp);
-            jsonObject.put("visualPartNumber",visualPartNumber);
-            jsonObject.put("textFieldResistorsID",textFieldResistorsID);
-            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()),jsonObject);
+
+            // 打开主控PLC通信端口
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("textFieldTemp", textFieldTemp);
+            jsonObject.put("visualPartNumber", visualPartNumber);
+            jsonObject.put("textFieldResistorsID", textFieldResistorsID);
+            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject);
             mainPLCListener.start();
-            mDataView.append(formatInfo("网口已打开，可以接收数据......" + getStatus()));
+            mDataView.append(formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
+
+            // TODO: 打开激光打码机通信端口
+            laserListener = new NetPortListener(Integer.parseInt(textFieldLaserPort.getText()), null);
+            laserListener.start();
+            mDataView.append(formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
+
+            // TODO: 初始化电源和测试设备
+
+            // 按钮设为"结束测试"
+            testStartButton.setText(UIConstant.NETPORT_CLOSE);
         } else if (actionCommand.equals(UIConstant.NETPORT_CLOSE)) {
+            // 关闭主控PLC通信端口
             mainPLCListener.closePort();
-            mDataView.append(formatInfo("网口已关闭......" + getStatus()));
+            mDataView.append(formatInfo("主控PLC通信端口已关闭......" + getStatus()));
+
+            // 关闭激光打码机通信端口
+            laserListener.closePort();
+            mDataView.append(formatInfo("主控PLC通信端口已关闭......" + getStatus()));
+
+            // TODO: 关闭电源，关闭测试设备
+
+            // 按钮设为"开始测试"
             testStartButton.setText(UIConstant.NETPORT_OPEN);
         } else {
             logger.error("something wrong boy..." + actionCommand);
