@@ -23,7 +23,6 @@ public class KeySightDevice_Electricity {
     private LongByReference VI_ATTR_TERMCHAR_EN;
 
     public KeySightDevice_Electricity() {
-        // KEYSIGHTINSTANCE = KeySightVci_Electricity.KEYSIGHTINSTANCE;
         KEYSIGHTINSTANCE = KeySightVci.KEYSIGHTINSTANCE;
     }
 
@@ -31,14 +30,6 @@ public class KeySightDevice_Electricity {
         if (isOpened) {
             return true;
         }
-
-        // try {
-        //     Socket s = new Socket("192.168.1.110",5024);
-        // } catch (IOException e) {
-        //     log.error("连接设备失败");
-        //     return false;
-        // }
-        // defaultSession = new LongByReference(getStartInf());
 
         try {
             /*****
@@ -57,6 +48,9 @@ public class KeySightDevice_Electricity {
             defaultSession = new LongByReference(59005407);
             int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+                // TODO: 界面上，此设备状态设为Red
+                // TODO: 界面上，TextArea增加一行"不能与设备 + DefaultDevicesConfig.eleName + 建立通信"
+                // TODO: 通知主控，设备有错
                 return false;
             }
             vipSession = new LongByReference(0);
@@ -65,12 +59,16 @@ public class KeySightDevice_Electricity {
             NativeLong b = new NativeLong(0);
             result = KEYSIGHTINSTANCE.viOpen(a, cmd, b, b, vipSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+                // TODO: 界面上，此设备状态设为Red
+                // TODO: 界面上，TextArea增加一行"不能找到设备 + DefaultDevicesConfig.eleName + IP"
+                // TODO: 通知主控，设备有错
                 return false;
             }
             logger.info("连接ip=" + eleIp + "的设备成功");
 
             // TODO: 界面上，此设备状态设为Green
-            // TODO: 界面上，TextArea增加一行"电流万用表连接成功"
+            // TODO: 界面上，TextArea增加一行"设备 + DefaultDevicesConfig.eleName + 连接成功"
+            // TODO: 通知主控，设备有错
         } catch (Exception e) {
             logger.error(e);
             // TODO: 界面上，此设备状态设为Red
@@ -81,16 +79,17 @@ public class KeySightDevice_Electricity {
     }
 
     public boolean close() {
+        // TODO: 退出远程模式失败，界面上要显示不？
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viClose(a);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
             logger.warn(result);
             return false;
         }
-        NativeLong b = new NativeLong(defaultSession.getValue());
-        result = KEYSIGHTINSTANCE.viClose(b);
 
         // TODO: 退出远程模式失败，界面上要显示不？
+        NativeLong b = new NativeLong(defaultSession.getValue());
+        result = KEYSIGHTINSTANCE.viClose(b);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
             logger.warn("KeySight退出远程模式失败");
             return false;
@@ -127,6 +126,7 @@ public class KeySightDevice_Electricity {
             logger.warn("执行命令失败,result=" + result);
             // TODO: 界面上TEXTAREA上显示"'执行命令失败,result=' + result"
             // TODO: 界面上此设备状态显示为Red
+            // TODO: 通知主控，设备有错
         }
         return true;
     }
@@ -139,6 +139,7 @@ public class KeySightDevice_Electricity {
             logger.info(result);
             // TODO: 界面上TEXTAREA上显示"'执行命令失败,result=' + result"
             // TODO: 界面上此设备状态显示为Red
+            // TODO: 通知主控，设备有错
             return null;
         }
         return mem.getString(0);
@@ -148,6 +149,7 @@ public class KeySightDevice_Electricity {
         if (isSetEle) {
             return true;
         }
+
         if (writeCmd("CONF:CURR 3") && writeCmd("CURR:DC:RANG 3")) {
             logger.info("设置为DC电流模式");
             isSetEle = true;
