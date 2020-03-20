@@ -5,6 +5,15 @@ import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
 
+/**
+ * 之前四个类，
+ * KeySightVci_Electricity，
+ * KeySightVci_Voltage，
+ * KeySightVci_Voltage16,
+ * KeySightVci_NTC
+ * 除了KeySightVci Instance名字不一样，其它都完全一样
+ * 所以合并成一个类了
+ */
 public interface KeySightVci extends Library {
     String dllName = ".\\libs\\visa32";
     /**
