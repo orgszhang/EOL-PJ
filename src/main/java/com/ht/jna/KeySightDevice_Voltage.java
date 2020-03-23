@@ -1,5 +1,6 @@
 package com.ht.jna;
 
+import com.alibaba.fastjson.JSONObject;
 import com.ht.base.SpringContext;
 import com.ht.entity.Devices;
 import com.ht.repository.DevicesRepo;
@@ -9,6 +10,9 @@ import com.sun.jna.ptr.LongByReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.swing.JTextArea;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Optional;
 
 public class KeySightDevice_Voltage {
@@ -119,16 +123,29 @@ public class KeySightDevice_Voltage {
         return result == KEYSIGHTINSTANCE.STATUS_OK;
     }
 
-    public Boolean writeCmd(String cmdStr) {
+    public Boolean writeCmd(String cmdStr, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
         // VI_ATTR_SUPPRESS_END_EN();
         // VI_ATTR_TERMCHAR_EN();
-        NativeLong a = new NativeLong(vipSession.getValue());
-        int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
+       /* NativeLong a = new NativeLong(vipSession.getValue());*/
+   /*     int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);*/
+        int result =1;
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
             logger.warn("执行命令失败,result=" + result);
             // TODO: 界面上TEXTAREA上显示"'执行命令失败,result=' + result"
+            mDataView.append("执行命令失败"+"\r\n");
             // TODO: 界面上此设备状态显示为Red
+            eolStatus.set("RED");
+            mDataView.append("设备状态: "+eolStatus.get()+"\r\n");
             // TODO: 通知主控，设备有错
+            JSONObject jsonObject=new JSONObject();
+            jsonObject.put("Error","xxx");
+            byte[] bytes = jsonObject.toJSONString().getBytes();
+            try {
+                dos.write(bytes);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return true;
     }
@@ -152,7 +169,7 @@ public class KeySightDevice_Voltage {
             return true;
         }
 
-        if (writeCmd("CONF:VOLT 0.1") && writeCmd("CONF:VOLT 0.1")) {
+        if (writeCmd("CONF:VOLT 0.1", null, null, null) && writeCmd("CONF:VOLT 0.1", null, null, null)) {
             logger.info("设置为DC电压模式");
             isSetVol = true;
             return true;

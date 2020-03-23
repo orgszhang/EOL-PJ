@@ -13,6 +13,8 @@ import com.ht.utils.TestConstant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.swing.JTextArea;
+import java.io.DataOutputStream;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
@@ -32,7 +34,7 @@ public class KeySightManager {
 
         KeySightManager manager = new KeySightManager();
         manager.initDevices();
-        TestResults result = manager.driveDevices(resistorID, cirTemp);
+ /*       TestResults result = manager.driveDevices(resistorID, cirTemp, mDataView, eolStatus);*/
         manager.closeDivices();
     }
 
@@ -63,7 +65,7 @@ public class KeySightManager {
         keySightDeviceNtc.close();
     }
 
-    public TestResults driveDevices(String visualPartNumber, double cirTemp) {
+    public TestResults driveDevices(String visualPartNumber, double cirTemp, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
         double Electricity; //电流
         double Voltage; //电压
         double voltagev16;  //电压
@@ -77,9 +79,10 @@ public class KeySightManager {
         }
 
         //分别发送指令通知六位半需要读取数据
-        keySightDeviceVoltage.writeCmd("READ?");
+        keySightDeviceVoltage =new KeySightDevice_Voltage();
+        keySightDeviceVoltage.writeCmd("READ?",mDataView,eolStatus,dos);
         keySightDeviceVoltage16.writeCmd("READ?");
-        keySightDeviceElectricity.writeCmd("READ?");
+        keySightDeviceElectricity.writeCmd("READ?",mDataView,  eolStatus);
         keySightDeviceNtc.writeCmd("READ?");
 
         //分别从三台设备读取数值，取到值后可以根据需求组成不同的数据结构，这里我就不写了
@@ -138,7 +141,7 @@ public class KeySightManager {
         return result;
     }
 
-    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID) {
+    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
         ProRecords thePart = new ProRecords();
         thePart.setVisualPartNumber(visualPartNumber);
 
@@ -153,7 +156,7 @@ public class KeySightManager {
         // 按ResistorID和maskID，获得一次Run
         for (int i = 0; i < TestConstant.TEST_TIMES; i++) {
             // TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
-            TestResults oneTest = driveDevices(visualPartNumber, cirTemp);
+            TestResults oneTest=  driveDevices(visualPartNumber, cirTemp,mDataView,eolStatus,dos);
             r25 = r25 + oneTest.getR25();
             r16 = r16 + oneTest.getR16();
             rntc = rntc + oneTest.getNtcR();

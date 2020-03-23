@@ -9,6 +9,7 @@ import com.sun.jna.ptr.LongByReference;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.swing.JTextArea;
 import java.util.Optional;
 
 public class KeySightDevice_Electricity {
@@ -117,7 +118,7 @@ public class KeySightDevice_Electricity {
         return result == KEYSIGHTINSTANCE.STATUS_OK;
     }
 
-    public Boolean writeCmd(String cmdStr) {
+    public Boolean writeCmd(String cmdStr, JTextArea mDataView, ThreadLocal<String> eolStatus) {
         // VI_ATTR_SUPPRESS_END_EN();
         // VI_ATTR_TERMCHAR_EN();
         NativeLong a = new NativeLong(vipSession.getValue());
@@ -150,7 +151,7 @@ public class KeySightDevice_Electricity {
             return true;
         }
 
-        if (writeCmd("CONF:CURR 3") && writeCmd("CURR:DC:RANG 3")) {
+        if (writeCmd("CONF:CURR 3", null, null) && writeCmd("CURR:DC:RANG 3",null,null)) {
             logger.info("设置为DC电流模式");
             isSetEle = true;
             return true;

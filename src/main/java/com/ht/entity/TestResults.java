@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "TestResults")
+@Table(name = "testResults")
 public class TestResults {
     /*
 
@@ -47,6 +47,8 @@ public class TestResults {
     private boolean NTC_OK;
     @Column(name = "TestTime")
     private Date testTime;
+
+
 
     public long getId() {
         return this.id;

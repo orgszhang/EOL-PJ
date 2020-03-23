@@ -6,6 +6,7 @@ import com.ht.comm.NetPortListener;
 import com.ht.entity.Devices;
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
+import com.ht.printer.PrinterListener;
 import com.ht.repository.DevicesRepo;
 import com.ht.utils.TestConstant;
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +52,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
     JTextField textFieldRt_R25 = new HTSSResultField();  // Rt
     JTextField textFieldRw_R16 = new HTSSResultField();  // Rw
     JTextField textFieldRntc_NTCRValue = new HTSSResultField();  // Rntc
-    JTextField textFieldTemperature = new HTSSResultField();
+    JTextField textFieldTemperature = new HTSSResultField(); //换算温度
 
     // Labels
     JLabel labelResultOne = new HTSSLabel(UIConstant.LABEL_TO_TEST);
@@ -59,7 +60,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
     JLabel labelQRCode = new HTSSLabel(UIConstant.LABEL_TO_GENERATE);
     // 网口
     NetPortListener mainPLCListener;
-    NetPortListener laserListener;
+    PrinterListener printerListener;
 
     // 串口
     private JTextArea mDataView = new JTextArea();
@@ -433,6 +434,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         /*devicesPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
                 "设备地址", TitledBorder.LEFT, TitledBorder.CENTER, UIConstant.TEXT_FONT));*/
+        //row 1
 
         List<Devices> deviceList = null;
         try {
@@ -442,7 +444,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             logger.error(e);
         }
 
-        //row 1
+
         JLabel l1 = new HTSSLabel("设备");
         JPanel p1 = new JPanel(new BorderLayout());
         l1.setFont(UIConstant.TEXT_FONT);
@@ -508,6 +510,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
         return devicesPanel;
     }
 
+
+
     /**
      * 按钮监听事件
      */
@@ -525,13 +529,24 @@ public class PanelsEOL extends JPanel implements ActionListener {
         } else if (actionCommand.equals(UIConstant.NETPORT_OPEN)) {
             frameReset();
             logger.info("测试开始...");
+            printerListener= new PrinterListener();
+            printerListener.start();
             if (!checkInput()) return;
 
             // 打开主控PLC通信端口
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("textFieldTemp", textFieldTemp);
-            jsonObject.put("visualPartNumber", visualPartNumber);
-            jsonObject.put("textFieldResistorsID", textFieldResistorsID);
+            jsonObject.put("textFieldTemp",textFieldTemp);
+            jsonObject.put("visualPartNumber",visualPartNumber);
+            jsonObject.put("textFieldResistorsID",textFieldResistorsID);
+            jsonObject.put("textFieldRt_R25",textFieldRt_R25);
+            jsonObject.put("textFieldRw_R16",textFieldRw_R16);
+            jsonObject.put("textFieldRntc_NTCRValue",textFieldRntc_NTCRValue);
+            jsonObject.put("textFieldTemperature",textFieldTemperature);
+            jsonObject.put("labelResultOne",labelResultOne);
+            jsonObject.put("labelResultTwo",labelResultTwo);
+            jsonObject.put("labelQRCode",labelQRCode);
+            jsonObject.put("mDataView",mDataView);
+            jsonObject.put("eolStatus",eolStatus);
             mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject);
             mainPLCListener.start();
             mDataView.append(UIConstant.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
@@ -550,11 +565,12 @@ public class PanelsEOL extends JPanel implements ActionListener {
         } else if (actionCommand.equals(UIConstant.NETPORT_CLOSE)) {
             // 关闭主控PLC通信端口
             mainPLCListener.closePort();
+            printerListener.closePort();
             mDataView.append(UIConstant.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
 
             // TODO: 关闭激光打码机通信端口
             // laserListener.closePort();
-            mDataView.append(UIConstant.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
+            mDataView.append(UIConstant.formatInfo("激光打码机通信端口已关闭......" + getStatus()));
 
             // TODO: 关闭电源，关闭测试设备
 
@@ -565,7 +581,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         }
     }
 
-    private void test() {
+/*    private void test() {
         String vp = visualPartNumber.getText();
         String factory = null;
         if (vp.startsWith("D")) {
@@ -576,7 +592,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         if (factory == null) return;
         String cirTemp = textFieldTemp.getText();
         String id = textFieldResistorsID.getText();
-        ProRecords part = manager.testThePart(factory, Double.parseDouble(cirTemp), id);
+        *//*ProRecords part = manager.testThePart(factory, Double.parseDouble(cirTemp), id, mDataView, eolStatus, dos);*//*
 
         //TODO: 拿到结果, 回显
         NumberFormat nf = NumberFormat.getInstance();
@@ -611,7 +627,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         mDataView.append(UIConstant.formatInfo("测试结束......"));
         // logger.info("result testResultVo is: " + part);
         testStartButton.setEnabled(true);
-    }
+    }*/
 
     private void frameReset() {
         logger.debug("信息重置...");
