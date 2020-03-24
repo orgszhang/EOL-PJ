@@ -4,11 +4,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.ht.base.SpringContext;
 import com.ht.comm.NetPortListener;
 import com.ht.entity.Devices;
-import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
 import com.ht.printer.PrinterListener;
 import com.ht.repository.DevicesRepo;
-import com.ht.utils.TestConstant;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,8 +18,10 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.InetAddress;
-import java.text.NumberFormat;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
 
 /**
@@ -62,6 +63,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
     NetPortListener mainPLCListener;
     PrinterListener printerListener;
 
+    Socket printSocket = null;
+    ServerSocket printSeverSocket = null;
     // 串口
     private JTextArea mDataView = new JTextArea();
 
@@ -529,7 +532,14 @@ public class PanelsEOL extends JPanel implements ActionListener {
         } else if (actionCommand.equals(UIConstant.NETPORT_OPEN)) {
             frameReset();
             logger.info("测试开始...");
-            printerListener= new PrinterListener();
+
+            try {
+                printSeverSocket = new ServerSocket(8082);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            printerListener= new PrinterListener(printSeverSocket);
+            System.out.println(printerListener.getSocket());
             printerListener.start();
             if (!checkInput()) return;
 
@@ -547,7 +557,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("labelQRCode",labelQRCode);
             jsonObject.put("mDataView",mDataView);
             jsonObject.put("eolStatus",eolStatus);
-            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject);
+            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject,printSeverSocket);
             mainPLCListener.start();
             mDataView.append(UIConstant.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
 

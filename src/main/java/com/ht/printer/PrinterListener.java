@@ -1,17 +1,11 @@
 package com.ht.printer;
 
-
-
-
-import com.alibaba.fastjson.JSONObject;
 import com.ht.comm.NetPortListener;
-import com.ht.entity.ProRecords;
-import com.ht.jna.KeySightManager;
+
 import com.ht.utils.DateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.awt.Color;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,13 +17,38 @@ import java.util.Scanner;
 public class PrinterListener extends Thread{
     private static final Log logger = LogFactory.getLog(NetPortListener.class);
     ServerSocket server = null;
-    Socket socket = null;
-    public PrinterListener() {
-        try {
-            server = new ServerSocket(8082);
-        } catch (IOException e) {
-            logger.warn(e);
-        }
+    public Socket socket = null;
+    public Boolean isConnect =false;
+
+    public  PrinterListener(ServerSocket serverSocket) {
+        this.server=serverSocket;
+    }
+    public  PrinterListener( ) {
+
+    }
+
+    public Boolean getConnect() {
+        return isConnect;
+    }
+
+    public void setConnect(Boolean connect) {
+        isConnect = connect;
+    }
+
+    public ServerSocket getServer() {
+        return server;
+    }
+
+    public void setServer(ServerSocket server) {
+        this.server = server;
+    }
+
+    public Socket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(Socket socket) {
+        this.socket = socket;
     }
 
     public void closePort() {
@@ -47,7 +66,10 @@ public class PrinterListener extends Thread{
         super.run();
         try {
             System.out.println(DateUtil.getdate() + "  等待激光打码机客户端连接...");
+            //這裏得到激光打碼機socket
             socket = server.accept();
+            this.setSocket(socket);
+            this.setConnect(true);
             new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
             System.out.println(DateUtil.getdate() + "  激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
             InputStream in = socket.getInputStream();
@@ -71,7 +93,7 @@ public class PrinterListener extends Thread{
 
 
 
-    class PrinterSendMessThread extends Thread {
+    public  class PrinterSendMessThread extends Thread {
         @Override
         public void run() {
             super.run();

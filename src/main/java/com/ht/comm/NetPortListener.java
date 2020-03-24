@@ -2,11 +2,11 @@ package com.ht.comm;
 
 
 import com.alibaba.fastjson.JSONObject;
+
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
-import com.ht.swing.HTSSLabel;
-import com.ht.swing.HTSSResultField;
-import com.ht.swing.UIConstant;
+import com.ht.printer.PrinterListener;
+
 import com.ht.utils.DateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,8 +40,12 @@ public class NetPortListener extends Thread {
     JLabel labelQRCode = null;
     JTextArea mDataView =null;
     ThreadLocal<String> eolStatus;
+    ServerSocket printSeverSocket;
+    Socket printSocket;
 
-    public NetPortListener(int port,JSONObject jsonObject) {
+
+
+    public NetPortListener(int port,JSONObject jsonObject, ServerSocket printSeverSocket) {
         try {
             server = new ServerSocket(port);
             this.codeField=(JTextField) jsonObject.get("visualPartNumber");
@@ -59,10 +63,13 @@ public class NetPortListener extends Thread {
             this.labelQRCode=(JLabel)jsonObject.get("labelQRCode");
             this.mDataView =(JTextArea)jsonObject.get("mDataView");
             this.eolStatus=(ThreadLocal<String>)jsonObject.get("eolStatus");
+            this.printSeverSocket=printSeverSocket;
         } catch (IOException e) {
             logger.warn(e);
         }
     }
+
+
 
     public void closePort() {
         try {
@@ -118,8 +125,13 @@ public class NetPortListener extends Thread {
                         labelResultTwo.setForeground(Color.red);
                     }
                     labelQRCode.setText(proRecords.getProCode());
+                    //这里发送给printerSocket客户端----------------------------------------------
+                    Socket socketPrint = new PrinterListener().getSocket();
+                    DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
+                    dosPrint.write(proRecords.getProCode().getBytes());
                     this.notify();
-                }
+                    }
+
 
             }
         } catch (IOException e) {
@@ -129,6 +141,34 @@ public class NetPortListener extends Thread {
     }
 
 
+    class printSendMessThread extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            Scanner scanner = null;
+            OutputStream out = null;
+            try {
+                if (printSocket != null) {
+                    scanner = new Scanner(System.in);
+                    out = printSocket.getOutputStream();
+                    String in = "";
+                    do {
+                        in = scanner.next();
+                        out.write(("" + in).getBytes("UTF-8"));
+                        out.flush();// 清空缓存区的内容
+                    } while (!in.equals("q"));
+                    scanner.close();
+                    try {
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     class sendMessThread extends Thread {
         @Override
