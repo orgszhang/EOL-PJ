@@ -2,14 +2,20 @@ package com.ht.comm;
 
 
 import com.alibaba.fastjson.JSONObject;
+
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
+import com.ht.printer.PrinterListener;
+
 import com.ht.utils.DateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.swing.*;
-import java.awt.*;
+
+import javax.swing.JLabel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import java.awt.Color;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,8 +40,12 @@ public class NetPortListener extends Thread {
     JLabel labelQRCode = null;
     JTextArea mDataView =null;
     ThreadLocal<String> eolStatus;
+    ServerSocket printSeverSocket;
+    Socket printSocket;
 
-    public NetPortListener(int port,JSONObject jsonObject) {
+
+
+    public NetPortListener(int port,JSONObject jsonObject, ServerSocket printSeverSocket) {
         try {
             server = new ServerSocket(port);
             this.codeField=(JTextField) jsonObject.get("visualPartNumber");
@@ -53,10 +63,13 @@ public class NetPortListener extends Thread {
             this.labelQRCode=(JLabel)jsonObject.get("labelQRCode");
             this.mDataView =(JTextArea)jsonObject.get("mDataView");
             this.eolStatus=(ThreadLocal<String>)jsonObject.get("eolStatus");
+            this.printSeverSocket=printSeverSocket;
         } catch (IOException e) {
             logger.warn(e);
         }
     }
+
+
 
     public void closePort() {
         try {
@@ -72,17 +85,17 @@ public class NetPortListener extends Thread {
 
         super.run();
         try {
-            System.out.println(DateUtil.getDate() + "  等待客户端连接...");
+            System.out.println(DateUtil.getdate() + "  等待客户端连接...");
             socket = server.accept();
             new sendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-            System.out.println(DateUtil.getDate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
+            System.out.println(DateUtil.getdate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
             InputStream in = socket.getInputStream();
             int len = 0;
             byte[] buf = new byte[1024];
             synchronized (this) {
                 while ((len = in.read(buf)) != -1) {
                     String message = new String(buf, 0, len, "UTF-8");
-                    System.out.println(DateUtil.getDate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
+                    System.out.println(DateUtil.getdate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
                             + message);
 
                     JSONObject jsonObject = JSONObject.parseObject(message);
@@ -112,8 +125,13 @@ public class NetPortListener extends Thread {
                         labelResultTwo.setForeground(Color.red);
                     }
                     labelQRCode.setText(proRecords.getProCode());
+                    //这里发送给printerSocket客户端----------------------------------------------
+                    Socket socketPrint = new PrinterListener().getSocket();
+                    DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
+                    dosPrint.write(proRecords.getProCode().getBytes());
                     this.notify();
-                }
+                    }
+
 
             }
         } catch (IOException e) {
@@ -123,6 +141,34 @@ public class NetPortListener extends Thread {
     }
 
 
+    class printSendMessThread extends Thread {
+        @Override
+        public void run() {
+            super.run();
+            Scanner scanner = null;
+            OutputStream out = null;
+            try {
+                if (printSocket != null) {
+                    scanner = new Scanner(System.in);
+                    out = printSocket.getOutputStream();
+                    String in = "";
+                    do {
+                        in = scanner.next();
+                        out.write(("" + in).getBytes("UTF-8"));
+                        out.flush();// 清空缓存区的内容
+                    } while (!in.equals("q"));
+                    scanner.close();
+                    try {
+                        out.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     class sendMessThread extends Thread {
         @Override
