@@ -8,11 +8,7 @@ public final class QRCodeGenerator {
     private static final String checksum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%";
 
     public static String getSeqNumber(String lastQRCode) {
-        // TestEnv env = new TestEnv();
-        // String seq = env.getProperties("EOLConfig.cfg", "11D915743");
         String seq = lastQRCode.substring(27, 33);
-        // System.out.println(lastQRCode);
-        // System.out.println("-------------------------->" + seq);
 
         if ("999999".equals(seq))
             return "AAAAAA";
@@ -80,7 +76,6 @@ public final class QRCodeGenerator {
         }
 
         return newSeq;
-
     }
 
     public static String calQRCode(String factory, String seq) {
@@ -88,7 +83,6 @@ public final class QRCodeGenerator {
         barcode = barcode + factory;
         barcode = barcode + "  000###*1GU D5V ";
         barcode = barcode + seq;
-
 
         // 1GU D5V AABBEQ
         int sum = 0;
@@ -135,53 +129,20 @@ public final class QRCodeGenerator {
                 "#11G915743  000###*1GU D5V 099999$*#", "#11G915743  000###*1GU D5V 689120$*#",
                 "#11G915743  000###*1GU D5V 999999$*#", "#11G915743  000###*1GU D5V 059899$*#" */};
 
-        QRCodeGenerator gnr = new QRCodeGenerator();
-
         String key = "11D915743";
 
         try {
 
             // String lastQR = gnr.readValue(key);
             for (int i = 0; i < lastQRCode.length; i++) {
-                String s = gnr.getSeqNumber(lastQRCode[i]);
+                String s = QRCodeGenerator.getSeqNumber(lastQRCode[i]);
                 System.out.println("-------------------------->" + s);
 
-                String nextBarCode = gnr.calQRCode("11D915743", s);
+                String nextBarCode = QRCodeGenerator.calQRCode("11D915743", s);
                 System.out.println(nextBarCode + "\n");
             }
         } catch (Exception exp) {
             exp.printStackTrace();
         }
     }
-
-/*     public String readValue(String key) throws Exception {
-        File file = new File("QRCode.properties");
-        if (!file.exists())
-            file.createNewFile();
-
-        Properties props = new Properties();
-        try {
-            FileInputStream fis = new FileInputStream("QRCode.properties");
-            props.load(fis);
-            String value = props.getProperty(key);
-            return value;
-        } catch (Exception e) {
-
-            logger.error(e);
-            return null;
-        }
-    } */
-
-/*    public void writeProperties(String parameterName, String parameterValue) throws Exception {
-        Properties props = new Properties();
-
-        OutputStream out = new FileOutputStream("QRCode.properties", true);
-        // 设置配置名称和值
-        props.setProperty(parameterName, parameterValue);
-        // comments 等于配置文件的注释
-        props.store(out, "Update " + parameterName);
-        out.flush();
-        out.close();
-
-    } */
 }
