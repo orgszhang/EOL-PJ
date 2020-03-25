@@ -7,7 +7,7 @@ import com.ht.entity.Devices;
 import com.ht.jna.KeySightManager;
 import com.ht.printer.PrinterListener;
 import com.ht.repository.DevicesRepo;
-
+import com.ht.utils.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -559,12 +559,12 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("eolStatus",eolStatus);
             mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject,printSeverSocket);
             mainPLCListener.start();
-            mDataView.append(UIConstant.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
 
             // TODO: 打开激光打码机通信端口
             // laserListener = new NetPortListener(Integer.parseInt(textFieldLaserPort.getText()), null);
             // laserListener.start();
-            mDataView.append(UIConstant.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
 
             // TODO: 初始化电源和测试设备
             // TODO: 根据初始化结果，显示设备状态
@@ -576,11 +576,11 @@ public class PanelsEOL extends JPanel implements ActionListener {
             // 关闭主控PLC通信端口
             mainPLCListener.closePort();
             printerListener.closePort();
-            mDataView.append(UIConstant.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
 
             // TODO: 关闭激光打码机通信端口
             // laserListener.closePort();
-            mDataView.append(UIConstant.formatInfo("激光打码机通信端口已关闭......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("激光打码机通信端口已关闭......" + getStatus()));
 
             // TODO: 关闭电源，关闭测试设备
 
@@ -660,7 +660,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             Integer i = Integer.parseInt(mainPort);
             // mDataView.append("网络端口" + mainPort + "准备打开......" + "\r\n");
         } catch (Exception exp) {
-            mDataView.append(UIConstant.formatInfo("主控通信端口" + mainPort + "输入有误，请重新输入！"));
+            mDataView.append(DateUtil.formatInfo("主控通信端口" + mainPort + "输入有误，请重新输入！"));
             return false;
         }
 
@@ -669,7 +669,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             Integer i = Integer.parseInt(laserPort);
             // mDataView.append("网络端口" + laserPort + "准备打开......" + "\r\n");
         } catch (Exception exp) {
-            mDataView.append(UIConstant.formatInfo("激光打码机通信端口" + laserPort + "输入有误，请重新输入！"));
+            mDataView.append(DateUtil.formatInfo("激光打码机通信端口" + laserPort + "输入有误，请重新输入！"));
             return false;
         }
 
@@ -677,20 +677,20 @@ public class PanelsEOL extends JPanel implements ActionListener {
         try {
             double d = Double.parseDouble(cirTemp);
             if (d < 15) {
-                mDataView.append(UIConstant.formatInfo("环境温度" + cirTemp + "<15°C，过低！"));
+                mDataView.append(DateUtil.formatInfo("环境温度" + cirTemp + "<15°C，过低！"));
                 return false;
             } else if (d > 35) {
-                mDataView.append(UIConstant.formatInfo("环境温度" + cirTemp + ">35°C，过高！"));
+                mDataView.append(DateUtil.formatInfo("环境温度" + cirTemp + ">35°C，过高！"));
                 return false;
             }
         } catch (Exception exp) {
-            mDataView.append(UIConstant.formatInfo("环境温度值输入错误！"));
+            mDataView.append(DateUtil.formatInfo("环境温度值输入错误！"));
             return false;
         }
 
         String vPartStart = textFieldeolStatus.getText();
         if (1 == 1) {
-            mDataView.append(UIConstant.formatInfo("状态:" + eolStatus.get()));
+            mDataView.append(DateUtil.formatInfo("状态:" + eolStatus.get()));
         }
 
         return true;
