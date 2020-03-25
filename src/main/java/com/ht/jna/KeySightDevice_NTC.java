@@ -7,7 +7,7 @@ public class KeySightDevice_NTC extends KeySightDevice {
     private static final Log logger = LogFactory.getLog(KeySightDevice_NTC.class);
 
     public boolean open() {
-        return open("", "");
+        return open(DefaultDevicesConfig.ntcName, DefaultDevicesConfig.ntcIP);
     }
 
     public boolean setRCONF() {

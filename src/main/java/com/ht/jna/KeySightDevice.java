@@ -1,6 +1,9 @@
 package com.ht.jna;
 
 import com.alibaba.fastjson.JSONObject;
+import com.ht.base.SpringContext;
+import com.ht.entity.Devices;
+import com.ht.repository.DevicesRepo;
 import com.ht.utils.DateUtil;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
@@ -11,6 +14,7 @@ import org.apache.commons.logging.LogFactory;
 import javax.swing.*;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Optional;
 
 public class KeySightDevice {
     private static final Log logger = LogFactory.getLog(KeySightDevice.class);
@@ -29,9 +33,19 @@ public class KeySightDevice {
         KEYSIGHTINSTANCE = KeySightVci.KEYSIGHTINSTANCE;
     }
 
-    public boolean open(String name, String ip) {
+    public boolean open(String name, String ipIn) {
         if (isOpened) {
             return true;
+        }
+
+        String ip = ipIn;
+        try {
+            DevicesRepo repo = SpringContext.getBean(DevicesRepo.class);
+            Optional<Devices> oneRow = repo.findById(name);
+            ip = oneRow.get().getIpAddress();
+        } catch (Exception e) {
+            logger.warn("Cannot find IP address of " + name + " in database. Use the default configuration.");
+            logger.warn(e);
         }
 
         try {

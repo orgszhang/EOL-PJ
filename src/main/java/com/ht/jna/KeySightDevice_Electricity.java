@@ -7,7 +7,7 @@ public class KeySightDevice_Electricity extends KeySightDevice {
     private static final Log logger = LogFactory.getLog(KeySightDevice_Electricity.class);
 
     public boolean open() {
-        return open("", "");
+        return open(DefaultDevicesConfig.eleName, DefaultDevicesConfig.eleIP);
     }
 
     public boolean setEleCONF() {

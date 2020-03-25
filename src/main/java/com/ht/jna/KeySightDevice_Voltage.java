@@ -7,7 +7,7 @@ public class KeySightDevice_Voltage extends KeySightDevice {
     private static final Log logger = LogFactory.getLog(KeySightDevice_Voltage.class);
 
     public boolean open() {
-        return open("", "");
+        return open(DefaultDevicesConfig.v25Name, DefaultDevicesConfig.v25IP);
     }
 
     public boolean setVolCONF() {
