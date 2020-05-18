@@ -10,10 +10,14 @@ import java.util.Date;
  * @create: 2020-03-20 15:33
  **/
 public class DateUtil {
-    public static String getdate() {
+    public static String getDate() {
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        String result = format.format(date);
-        return result;
+        return format.format(date);
     }
+
+    public static String formatInfo(String s) {
+        return (getDate() + " - " + s + "\r\n");
+    }
+
 }

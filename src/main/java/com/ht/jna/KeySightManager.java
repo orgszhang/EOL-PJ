@@ -13,7 +13,7 @@ import com.ht.utils.TestConstant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.swing.JTextArea;
+import javax.swing.*;
 import java.io.DataOutputStream;
 import java.util.Calendar;
 import java.util.Date;
@@ -61,6 +61,7 @@ public class KeySightManager {
     public void closeDivices() {
         //读取完成后关闭设备
         keySightDeviceVoltage.close();
+        keySightDeviceVoltage16.close();
         keySightDeviceElectricity.close();
         keySightDeviceNtc.close();
     }
@@ -79,13 +80,11 @@ public class KeySightManager {
         }
 
         //分别发送指令通知六位半需要读取数据
-        keySightDeviceVoltage =new KeySightDevice_Voltage();
-        keySightDeviceVoltage.writeCmd("READ?",mDataView,eolStatus,dos);
-        keySightDeviceVoltage16.writeCmd("READ?");
-        keySightDeviceElectricity.writeCmd("READ?",mDataView,  eolStatus);
-        keySightDeviceNtc.writeCmd("READ?");
+        keySightDeviceVoltage.writeCmd("READ?", mDataView, eolStatus, dos);
+        keySightDeviceVoltage16.writeCmd("READ?", mDataView, eolStatus, dos);
+        keySightDeviceElectricity.writeCmd("READ?", mDataView, eolStatus, dos);
+        keySightDeviceNtc.writeCmd("READ?", mDataView, eolStatus, dos);
 
-        //分别从三台设备读取数值，取到值后可以根据需求组成不同的数据结构，这里我就不写了
         Voltage = Double.valueOf(keySightDeviceVoltage.readResult());
         voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult());
         Electricity = Double.valueOf(keySightDeviceElectricity.readResult());
@@ -155,8 +154,8 @@ public class KeySightManager {
         // 循环Test_Time次
         // 按ResistorID和maskID，获得一次Run
         for (int i = 0; i < TestConstant.TEST_TIMES; i++) {
-            // TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
-            TestResults oneTest=  driveDevices(visualPartNumber, cirTemp,mDataView,eolStatus,dos);
+            TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
+            // TestResults oneTest=  driveDevices(visualPartNumber, cirTemp,mDataView,eolStatus,dos);
             r25 = r25 + oneTest.getR25();
             r16 = r16 + oneTest.getR16();
             rntc = rntc + oneTest.getNtcR();
@@ -195,6 +194,8 @@ public class KeySightManager {
             factoryID = TestConstant.SVW;
         } else if (visualPartNumber.startsWith("G")) {
             factoryID = TestConstant.FAW;
+        } else {
+            return null;
         }
 
         logger.info("getLatestQRCodeByFactoryID start : " + factoryID);
