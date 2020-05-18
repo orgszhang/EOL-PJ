@@ -85,17 +85,17 @@ public class NetPortListener extends Thread {
 
         super.run();
         try {
-            System.out.println(DateUtil.getdate() + "  等待客户端连接...");
+            System.out.println(DateUtil.getDate() + "  等待客户端连接...");
             socket = server.accept();
             new sendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-            System.out.println(DateUtil.getdate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
+            System.out.println(DateUtil.getDate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
             InputStream in = socket.getInputStream();
             int len = 0;
             byte[] buf = new byte[1024];
             synchronized (this) {
                 while ((len = in.read(buf)) != -1) {
                     String message = new String(buf, 0, len, "UTF-8");
-                    System.out.println(DateUtil.getdate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
+                    System.out.println(DateUtil.getDate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
                             + message);
                     DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
                     JSONObject jsonObject = JSONObject.parseObject(message);

@@ -1,3 +1,4 @@
+/*
 package com.ht.dc;
 
 import com.digitalpetri.modbus.codec.Modbus;
@@ -17,20 +18,24 @@ import io.netty.util.ReferenceCountUtil;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+*/
 /***
  * modbus TCP协议Java通讯读取例子
  * https://www.cnblogs.com/ioufev/p/10831289.html
  * @author xqlee
- */
+ *//*
+
 public class SimpleMasterExample {
 
     static ModbusTcpMaster master;
 
-    /**
+    */
+/**
      * 获取TCP协议的Master
      *
      * @return
-     */
+     *//*
+
     public static void initModbusTcpMaster() {
         if (master == null) {
             // 创建配置
@@ -39,9 +44,11 @@ public class SimpleMasterExample {
         }
     }
 
-    /***
+    */
+/***
      * 释放资源
-     */
+     *//*
+
     public static void release() {
         if (master != null) {
             master.disconnect();
@@ -49,7 +56,8 @@ public class SimpleMasterExample {
         Modbus.releaseSharedResources();
     }
 
-    /**
+    */
+/**
      * 读取HoldingRegister数据
      *
      * @param address  寄存器地址
@@ -58,7 +66,8 @@ public class SimpleMasterExample {
      * @return 读取结果
      * @throws InterruptedException 异常
      * @throws ExecutionException   异常
-     */
+     *//*
+
     public static Number readHoldingRegisters(int address, int quantity, int unitId)
             throws InterruptedException, ExecutionException {
         Number result = null;
@@ -73,7 +82,8 @@ public class SimpleMasterExample {
         return result;
     }
 
-    /**
+    */
+/**
      * 读取InputRegisters模拟量数据
      *
      * @param address  寄存器开始地址
@@ -82,7 +92,8 @@ public class SimpleMasterExample {
      * @return 读取值
      * @throws InterruptedException 异常
      * @throws ExecutionException   异常
-     */
+     *//*
+
     public static Number readInputRegisters(int address, int quantity, int unitId)
             throws InterruptedException, ExecutionException {
         Number result = null;
@@ -97,7 +108,8 @@ public class SimpleMasterExample {
         return result;
     }
 
-    /**
+    */
+/**
      * 读取Coils开关量
      *
      * @param address  寄存器开始地址
@@ -106,7 +118,8 @@ public class SimpleMasterExample {
      * @return 读取值
      * @throws InterruptedException 异常
      * @throws ExecutionException   异常
-     */
+     *//*
+
     public static Boolean readCoils(int address, int quantity, int unitId)
             throws InterruptedException, ExecutionException {
         Boolean result = null;
@@ -121,7 +134,8 @@ public class SimpleMasterExample {
         return result;
     }
 
-    /**
+    */
+/**
      * 读取readDiscreteInputs开关量
      *
      * @param address  寄存器开始地址
@@ -130,7 +144,8 @@ public class SimpleMasterExample {
      * @return 读取值
      * @throws InterruptedException 异常
      * @throws ExecutionException   异常
-     */
+     *//*
+
     public static Boolean readDiscreteInputs(int address, int quantity, int unitId)
             throws InterruptedException, ExecutionException {
         Boolean result = null;
@@ -165,4 +180,4 @@ public class SimpleMasterExample {
             e.printStackTrace();
         }
     }
-}
+}*/

@@ -1,3 +1,4 @@
+/*
 package com.ht.dc;
 
 import com.serotonin.modbus4j.ModbusFactory;
@@ -14,7 +15,8 @@ public class ModBus4JTCPClient {
 
     private ModbusFactory modbusFactory;
 
-    /**
+    */
+/**
      * 写 [01 Coil Status(0x)]写一个 function ID = 5
      *
      * @param slaveId    slave的ID
@@ -23,7 +25,8 @@ public class ModBus4JTCPClient {
      * @return 是否写入成功
      * @throws ModbusTransportException
      * @throws ModbusInitException
-     */
+     *//*
+
     public static boolean writeCoil(ModbusMaster master, int slaveId, int registerId, boolean writeValue)
             throws ModbusTransportException, ModbusInitException {
         // 创建请求
@@ -37,7 +40,8 @@ public class ModBus4JTCPClient {
         }
     }
 
-    /**
+    */
+/**
      * 写[01 Coil Status(0x)] 写多个 function ID = 15
      *
      * @param slaveId     slaveId
@@ -46,7 +50,8 @@ public class ModBus4JTCPClient {
      * @return 是否写入成功
      * @throws ModbusTransportException
      * @throws ModbusInitException
-     */
+     *//*
+
     public static boolean writeCoils(ModbusMaster master, int slaveId, int startOffset, boolean[] bdata)
             throws ModbusTransportException, ModbusInitException {
         // 创建请求
@@ -81,12 +86,14 @@ public class ModBus4JTCPClient {
         return modbusFactory;
     }
 
-    /**
+    */
+/**
      * @param ip
      * @param port
      * @return
      * @throws ModbusInitException
-     */
+     *//*
+
     public ModbusMaster getMaster(String ip, int port) throws ModbusInitException {
         ModbusMaster m = null;
         IpParameters tcpParameters = new IpParameters();
@@ -99,7 +106,8 @@ public class ModBus4JTCPClient {
         return m;
     }
 
-    /**
+    */
+/**
      * Holding Register类型
      *
      * @param master
@@ -111,7 +119,8 @@ public class ModBus4JTCPClient {
      * @throws ModbusTransportException
      * @throws ErrorResponseException
      * @throws ModbusInitException
-     */
+     *//*
+
     public Number readHoldingRegister(ModbusMaster master, int modbusId, int registerId, int registerNumber,
                                       String analysisFlag) throws ModbusTransportException, ErrorResponseException, ModbusInitException {
         Number value = null;
@@ -162,7 +171,8 @@ public class ModBus4JTCPClient {
                 (registerNumber == 1) ? DataType.TWO_BYTE_INT_SIGNED : DataType.FOUR_BYTE_INT_SIGNED));
     }
 
-    /**
+    */
+/**
      * 写入寄存器
      *
      * @param master
@@ -172,7 +182,8 @@ public class ModBus4JTCPClient {
      * @return
      * @throws ModbusTransportException
      * @throws ModbusInitException
-     */
+     *//*
+
     public boolean writeRegister(ModbusMaster master, int modbusId, int registerId, short sdata)
             throws ModbusTransportException, ModbusInitException {
         // 创建请求对象
@@ -205,4 +216,4 @@ public class ModBus4JTCPClient {
                 (dataType == 1) ? DataType.TWO_BYTE_INT_UNSIGNED : DataType.FOUR_BYTE_INT_UNSIGNED);
         master.setValue(locator, writeValue);
     }
-}
+}*/
