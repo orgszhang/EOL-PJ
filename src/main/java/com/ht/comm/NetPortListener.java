@@ -4,6 +4,7 @@ package com.ht.comm;
 import com.alibaba.fastjson.JSONObject;
 
 import com.ht.entity.ProRecords;
+import com.ht.entity.TestResults;
 import com.ht.jna.KeySightManager;
 import com.ht.printer.PrinterListener;
 
@@ -23,52 +24,51 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
+
 //123
 public class NetPortListener extends Thread {
     private static final Log logger = LogFactory.getLog(NetPortListener.class);
     ServerSocket server = null;
     Socket socket = null;
-    JTextField codeField=null;
-    JTextField qcField=null;
-    JTextField temp=null;
+    JTextField codeField = null;
+    JTextField qcField = null;
+    JTextField temp = null;
     JTextField textFieldRt_R25 = null;
     JTextField textFieldRw_R16 = null; // Rw
     JTextField textFieldRntc_NTCRValue = null; // Rntc
-    JTextField textFieldTemperature =  null; //换算温度
+    JTextField textFieldTemperature = null; //换算温度
     JLabel labelResultOne = null; //分流电阻结果
     JLabel labelResultTwo = null; //ntc结果
     JLabel labelQRCode = null;
-    JTextArea mDataView =null;
+    JTextArea mDataView = null;
     ThreadLocal<String> eolStatus;
     ServerSocket printSeverSocket;
     Socket printSocket;
 
 
-
-    public NetPortListener(int port,JSONObject jsonObject, ServerSocket printSeverSocket) {
+    public NetPortListener(int port, JSONObject jsonObject, ServerSocket printSeverSocket) {
         try {
             server = new ServerSocket(port);
-            this.codeField=(JTextField) jsonObject.get("visualPartNumber");
-            this.qcField=(JTextField) jsonObject.get("textFieldResistorsID");
-            this.temp=(JTextField) jsonObject.get("textFieldTemp");
-            this.codeField=(JTextField) jsonObject.get("visualPartNumber");
-            this.qcField=(JTextField) jsonObject.get("textFieldResistorsID");
-            this.temp=(JTextField) jsonObject.get("textFieldTemp");
-            this.textFieldRt_R25=(JTextField)jsonObject.get("textFieldRt_R25");
-            this.textFieldRntc_NTCRValue=(JTextField)jsonObject.get("textFieldRntc_NTCRValue");
-            this.textFieldRw_R16=(JTextField)jsonObject.get("textFieldRw_R16");
-            this.textFieldTemperature=(JTextField)jsonObject.get("textFieldTemperature");
-            this.labelResultOne=(JLabel)jsonObject.get("labelResultOne");
-            this.labelResultTwo=(JLabel)jsonObject.get("labelResultTwo");
-            this.labelQRCode=(JLabel)jsonObject.get("labelQRCode");
-            this.mDataView =(JTextArea)jsonObject.get("mDataView");
-            this.eolStatus=(ThreadLocal<String>)jsonObject.get("eolStatus");
-            this.printSeverSocket=printSeverSocket;
+            this.codeField = (JTextField) jsonObject.get("visualPartNumber");
+            this.qcField = (JTextField) jsonObject.get("textFieldResistorsID");
+            this.temp = (JTextField) jsonObject.get("textFieldTemp");
+            this.codeField = (JTextField) jsonObject.get("visualPartNumber");
+            this.qcField = (JTextField) jsonObject.get("textFieldResistorsID");
+            this.temp = (JTextField) jsonObject.get("textFieldTemp");
+            this.textFieldRt_R25 = (JTextField) jsonObject.get("textFieldRt_R25");
+            this.textFieldRntc_NTCRValue = (JTextField) jsonObject.get("textFieldRntc_NTCRValue");
+            this.textFieldRw_R16 = (JTextField) jsonObject.get("textFieldRw_R16");
+            this.textFieldTemperature = (JTextField) jsonObject.get("textFieldTemperature");
+            this.labelResultOne = (JLabel) jsonObject.get("labelResultOne");
+            this.labelResultTwo = (JLabel) jsonObject.get("labelResultTwo");
+            this.labelQRCode = (JLabel) jsonObject.get("labelQRCode");
+            this.mDataView = (JTextArea) jsonObject.get("mDataView");
+            this.eolStatus = (ThreadLocal<String>) jsonObject.get("eolStatus");
+            this.printSeverSocket = printSeverSocket;
         } catch (IOException e) {
             logger.warn(e);
         }
     }
-
 
 
     public void closePort() {
@@ -97,40 +97,60 @@ public class NetPortListener extends Thread {
                     String message = new String(buf, 0, len, "UTF-8");
                     System.out.println(DateUtil.getdate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
                             + message);
-
-                    JSONObject jsonObject = JSONObject.parseObject(message);
-                    codeField.setText(jsonObject.getString("code"));
-                    qcField.setText(jsonObject.getString("qc"));
-                    KeySightManager keySightManager=new KeySightManager();
                     DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                    JSONObject jsonObject = JSONObject.parseObject(message);
+                    if (jsonObject.getString("Command").equals("QueryStatus")) {
+                        JSONObject result = new JSONObject();
+                        result.put("Command", "QueryStatus");
+                        JSONObject resultValue = new JSONObject();
+                        resultValue.put("EolStatus", eolStatus.get());
+                        result.put("ResultValue", resultValue);
+                        dos.write(result.toJSONString().getBytes());
+                    } else if (jsonObject.getString("Command").equals("TestAPart")) {
+                        codeField.setText(jsonObject.getString("VirtualPartNumber"));
+                        qcField.setText(jsonObject.getString("ResistorID"));
+                        KeySightManager keySightManager = new KeySightManager();
+/*
                     ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("code"), Double.valueOf(temp.getText()), jsonObject.getString("qc"),mDataView,eolStatus,dos);
-                    textFieldRt_R25.setText(proRecords.getR25().toString());
-                    textFieldRw_R16.setText(proRecords.getR16().toString());
-                    textFieldRntc_NTCRValue.setText(proRecords.getRntc().toString());
-                    textFieldTemperature.setText(proRecords.getTntc().toString());
-                    if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
-                        labelResultOne.setText("合格");
-                        labelResultOne.setForeground(Color.green);
+*/
+                        TestResults proRecords = keySightManager.pseudoDriveDevices(jsonObject.getString("code"), Double.valueOf(temp.getText()));
+                        /*       jsonObject.getString("qc"), mDataView, eolStatus, dos);*/
+                        textFieldRt_R25.setText(String.valueOf(proRecords.getR25()));
+                        textFieldRw_R16.setText(String.valueOf(proRecords.getR16()));
+                        textFieldRntc_NTCRValue.setText(String.valueOf(proRecords.getNtcT()));
+                        textFieldTemperature.setText(String.valueOf(proRecords.getNtcT()).toString());
+                        if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
+                            labelResultOne.setText("合格");
+                            labelResultOne.setForeground(Color.green);
 
-                    } else {
-                        labelResultOne.setText("不合格");
-                        labelResultOne.setForeground(Color.red);
-                    }
+                        } else {
+                            labelResultOne.setText("不合格");
+                            labelResultOne.setForeground(Color.red);
+                        }
 
-                    if (Math.abs(proRecords.getTntc() - Double.valueOf(temp.getText())) <= 3) {
-                        labelResultTwo.setText("合格");
-                        labelResultTwo.setForeground(Color.green);
-                    } else {
-                        labelResultTwo.setText("不合格");
-                        labelResultTwo.setForeground(Color.red);
+                        if (Math.abs(proRecords.getNtcT() - Double.valueOf(temp.getText())) <= 3) {
+                            labelResultTwo.setText("合格");
+                            labelResultTwo.setForeground(Color.green);
+                        } else {
+                            labelResultTwo.setText("不合格");
+                            labelResultTwo.setForeground(Color.red);
+                        }
+                        labelQRCode.setText("#11D915743  000###*1GU D5V AABAUI3*#");
+                        //这里发送给printerSocket客户端----------------------------------------------
+                        Socket socketPrint = new PrinterListener().getSocket();
+                        DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
+                        /*dosPrint.write(proRecords.getProCode().getBytes());*/
+                        String json = "#11D915743  000###*1GU D5V AABAUI3*#";
+                        /*    dosPrint.write(json.getBytes());*/
+                        System.out.println(json);
+
+                    }else if(jsonObject.getString("Command").equals("QueryResult")) {
+
+                    }else if(jsonObject.getString("Command").equals("DataSaved")) {
+
                     }
-                    labelQRCode.setText(proRecords.getProCode());
-                    //这里发送给printerSocket客户端----------------------------------------------
-                    Socket socketPrint = new PrinterListener().getSocket();
-                    DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
-                    dosPrint.write(proRecords.getProCode().getBytes());
                     this.notify();
-                    }
+                }
 
 
             }

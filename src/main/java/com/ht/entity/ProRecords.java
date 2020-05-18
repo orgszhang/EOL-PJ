@@ -17,7 +17,7 @@ import java.util.Optional;
  */
 // @Data
 @Entity
-@Table(name = "ProRecords")
+@Table(name = "latestQRCodes")
 public class ProRecords {
     @Id
     @Column(name = "VisualPartNumber")
