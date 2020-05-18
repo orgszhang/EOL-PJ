@@ -13,6 +13,7 @@ public final class UIConstant {
 
     static final String LABEL_TO_GENERATE = "待生成";
     static final String LABEL_TO_TEST = "待检测";
+    static final String MANUAL_TEST = "零件检测";
 
     static final String EMPTY_STRING = "";
 

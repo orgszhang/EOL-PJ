@@ -15,13 +15,16 @@ import org.apache.commons.logging.LogFactory;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -40,8 +43,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
     // Buttons
     JButton resetButton = new HTSSButton(UIConstant.RESET_BUTTON);
-    JButton testStartButton = new HTSSButton(UIConstant.NETPORT_OPEN);
-    JButton deviceButton = new HTSSButton(UIConstant.RESET_BUTTON);
+    JButton deviceManageButton = new HTSSButton(UIConstant.NETPORT_OPEN);
+    JButton manualTestButton = new HTSSButton(UIConstant.MANUAL_TEST);
 
     // Input Fields
     JTextField textFieldeolStatus = new HTSSInputField();  //
@@ -59,13 +62,18 @@ public class PanelsEOL extends JPanel implements ActionListener {
     JLabel labelResultOne = new HTSSLabel(UIConstant.LABEL_TO_TEST);
     JLabel labelResultTwo = new HTSSLabel(UIConstant.LABEL_TO_TEST);
     JLabel labelQRCode = new HTSSLabel(UIConstant.LABEL_TO_GENERATE);
+
+    JCheckBox checkBox01 = new JCheckBox("生成二维码");
+    JRadioButton radioBtn01 = new JRadioButton("生产模式");
+    JRadioButton radioBtn02 = new JRadioButton("自检模式");
+
     // 网口
     NetPortListener mainPLCListener;
     PrinterListener printerListener;
 
-    Socket printSocket = null;
+    // Socket printSocket = null;
     ServerSocket printSeverSocket = null;
-    // 串口
+
     private JTextArea mDataView = new JTextArea();
 
     private volatile boolean ready = true;
@@ -77,8 +85,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
         mainPanel.setVisible(true);
 
         resetButton.addActionListener(this);
-        testStartButton.addActionListener(this);
-        deviceButton.addActionListener(this);
+        deviceManageButton.addActionListener(this);
+        manualTestButton.addActionListener(this);
         /*     serialActionListener();*/
     }
 
@@ -225,12 +233,11 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         partDataPanel.add(new JLabel());
 
+
         JPanel jrbPanel = new JPanel();
 
         // 创建两个单选按钮
-        JRadioButton radioBtn01 = new JRadioButton("生产模式");
         radioBtn01.setFont(UIConstant.TEXT_FONT);
-        JRadioButton radioBtn02 = new JRadioButton("自检模式");
         radioBtn02.setFont(UIConstant.TEXT_FONT);
 
         // 创建按钮组，把两个单选按钮添加到该组
@@ -246,12 +253,44 @@ public class PanelsEOL extends JPanel implements ActionListener {
         partDataPanel.add(jrbPanel);
 
 
-        JPanel jcbPanel = new JPanel();
-        JCheckBox checkBox01 = new JCheckBox("生成二维码");
-        jcbPanel.add(checkBox01);
-        partDataPanel.add(jcbPanel);
+        JRadioButton radioBtn03 = new JRadioButton("11D");
+        JRadioButton radioBtn04 = new JRadioButton("11G");
+        radioBtn03.setFont(UIConstant.COPYRIGHT_FONT);
+        radioBtn04.setFont(UIConstant.COPYRIGHT_FONT);
 
-        partDataPanel.add(new JLabel());
+        ButtonGroup btnGroup1 = new ButtonGroup();
+        btnGroup1.add(radioBtn03);
+        btnGroup1.add(radioBtn04);
+        JPanel jrbPanel1 = new JPanel();
+        radioBtn03.setSelected(true);
+
+        jrbPanel1.add(radioBtn03);
+        jrbPanel1.add(radioBtn04);
+        partDataPanel.add(jrbPanel1);
+
+        ChangeListener changeListener = new ChangeListener() {
+            public void stateChanged(ChangeEvent changEvent) {
+                if (radioBtn01.isSelected()) { // 生产模式
+                    checkBox01.setSelected(true);
+                    checkBox01.setEnabled(false);
+                    manualTestButton.setEnabled(false);
+                    visualPartNumber.setEnabled(false);
+                    textFieldResistorsID.setEnabled(false);
+                    radioBtn03.setEnabled(false);
+                    radioBtn04.setEnabled(false);
+                } else if (radioBtn02.isSelected()) { // 生产模式
+                    checkBox01.setEnabled(true);
+                    manualTestButton.setEnabled(true);
+                    visualPartNumber.setEnabled(false);
+                    textFieldResistorsID.setEnabled(true);
+                    radioBtn03.setEnabled(true);
+                    radioBtn04.setEnabled(true);
+                }
+            }
+        };
+
+        radioBtn01.addChangeListener(changeListener);
+        radioBtn02.addChangeListener(changeListener);
 
 
         /*----- 虚拟零件号 ----*/
@@ -264,11 +303,15 @@ public class PanelsEOL extends JPanel implements ActionListener {
         label1.setPreferredSize(new Dimension(120, 30));
         panel1.add(label1);
         panel1.add(visualPartNumber);
-        visualPartNumber.setEnabled(false);
         visualPartNumber.setPreferredSize(UIConstant.INPUT_LONGDIMENSION);
         partDataPanel.add(panel1);
 
-        partDataPanel.add(new JLabel());
+        JPanel jcbPanel = new JPanel();
+
+        jcbPanel.add(checkBox01);
+        partDataPanel.add(jcbPanel);
+
+
 
         /*----- 分流器二维码 ----*/
         JPanel panel2 = new JPanel();
@@ -278,9 +321,13 @@ public class PanelsEOL extends JPanel implements ActionListener {
         label2.setPreferredSize(new Dimension(120, 30));
         panel2.add(label2);
         panel2.add(textFieldResistorsID);
-        textFieldResistorsID.setEnabled(false);
         textFieldResistorsID.setPreferredSize(UIConstant.INPUT_LONGDIMENSION);
         partDataPanel.add(panel2);
+
+        JPanel jmtPanel = new JPanel();
+        manualTestButton.setPreferredSize(new Dimension(150, 30));
+        jmtPanel.add(manualTestButton);
+        partDataPanel.add(jmtPanel);
 
         return partDataPanel;
     }
@@ -477,9 +524,9 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         devicesPanel.add(new JLabel());
 
-        testStartButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
+        deviceManageButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
         JPanel b1Panel = new JPanel();
-        b1Panel.add(testStartButton);
+        b1Panel.add(deviceManageButton);
         devicesPanel.add(b1Panel);
 
         resetButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
@@ -560,7 +607,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             // TODO: 以后还要根据测试结果，显示设备状态
 
             // 按钮设为"结束测试"
-            testStartButton.setText(UIConstant.NETPORT_CLOSE);
+            deviceManageButton.setText(UIConstant.NETPORT_CLOSE);
         } else if (actionCommand.equals(UIConstant.NETPORT_CLOSE)) {
             // 关闭主控PLC通信端口
             mainPLCListener.closePort();
@@ -574,7 +621,12 @@ public class PanelsEOL extends JPanel implements ActionListener {
             // TODO: 关闭电源，关闭测试设备
 
             // 按钮设为"开始测试"
-            testStartButton.setText(UIConstant.NETPORT_OPEN);
+            deviceManageButton.setText(UIConstant.NETPORT_OPEN);
+        } else if (actionCommand.equals(UIConstant.MANUAL_TEST)) {
+            Calendar cal = GregorianCalendar.getInstance();
+            String virualID = cal.get(Calendar.YEAR) + "" + cal.get(Calendar.MONTH)
+                    + "" + cal.get(Calendar.DATE) + "" + cal.get(Calendar.HOUR) + "" + cal.get(Calendar.MINUTE);
+            visualPartNumber.setText(virualID);
         } else {
             logger.error("something wrong boy..." + actionCommand);
         }
