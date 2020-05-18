@@ -12,7 +12,7 @@ import javax.persistence.Table;
 
 //@Data
 @Entity
-@Table(name = "LatestQRCodes")
+@Table(name = "latestQRCodes")
 public class LatestQRCodes {
     private static final Log logger = LogFactory.getLog(LatestQRCodes.class);
 

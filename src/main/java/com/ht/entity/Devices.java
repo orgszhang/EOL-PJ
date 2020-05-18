@@ -7,13 +7,13 @@ import javax.persistence.Table;
 
 //@Data
 @Entity
-@Table(name = "Devices")
+@Table(name = "devices")
 public class Devices {
-    @Column(name = "Device")
+    @Column(name = "device")
     private String device;
-    @Column(name = "IPAddress")
+    @Column(name = "ip_address")
     private String ipAddress;
-    @Column(name = "PortNumber")
+    @Column(name = "port_number")
     private String portNumber;
 
     @Id

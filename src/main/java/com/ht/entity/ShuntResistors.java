@@ -7,7 +7,7 @@ import javax.persistence.Table;
 
 // @Data
 @Entity
-@Table(name = "ShuntResistors")
+@Table(name = "shuntResistors")
 public class ShuntResistors {
 
     @Id
