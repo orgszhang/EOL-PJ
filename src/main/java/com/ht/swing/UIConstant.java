@@ -8,8 +8,8 @@ import java.awt.*;
 public final class UIConstant {
     static final String APP_NAME = "HTSS EOL Tester";
     static final String RESET_BUTTON = "全部重置";
-    static final String NETPORT_OPEN = "打开网口";
-    static final String NETPORT_CLOSE = "关闭网口";
+    public static final Font COPYRIGHT_FONT = new Font("微软雅黑", Font.BOLD, 12);
+    public static final Dimension BUTTON_DIMENSION = new Dimension(120, 30);
 
     static final String LABEL_TO_GENERATE = "待生成";
     static final String LABEL_TO_TEST = "待检测";
@@ -21,7 +21,7 @@ public final class UIConstant {
     public static final Font TITLE_FONT = new Font("微软雅黑", Font.BOLD, 28);
     public static final Font AREA_FONT = new Font("微软雅黑", Font.BOLD, 22);
     public static final Font TEXT_FONT = new Font("微软雅黑", Font.BOLD, 16);
-    public static final Font COPYRIGHT_FONT = new Font("微软雅黑", Font.BOLD, 10);
+    static final String NETPORT_OPEN = "连接设备";
 
     public static final String DELTA_R = "∆R";
     public static final String PERCENT = "%";
@@ -31,7 +31,7 @@ public final class UIConstant {
 
     public static final Dimension INPUT_DIMENSION = new Dimension(120, 30);
     public static final Dimension INPUT_LONGDIMENSION = new Dimension(200, 30);
-    public static final Dimension BUTTON_DIMENSION = new Dimension(200, 30);
+    static final String NETPORT_CLOSE = "断开设备";
 
     public static final Color BGCOLOR_BLUE = new Color(0, 173, 232);
     public static final Color BGCOLOR_GRAY = new Color(160, 160, 160);
