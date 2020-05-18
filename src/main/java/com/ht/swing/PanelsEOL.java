@@ -43,8 +43,9 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
     // Buttons
     JButton resetButton = new HTSSButton(UIConstant.RESET_BUTTON);
-    JButton deviceManageButton = new HTSSButton(UIConstant.NETPORT_OPEN);
+    JButton deviceManageButton = new HTSSButton(UIConstant.DEVICES_OPEN);
     JButton manualTestButton = new HTSSButton(UIConstant.MANUAL_TEST);
+    JButton plcButton = new HTSSButton(UIConstant.PLC_OPEN);
 
     // Input Fields
     JTextField textFieldeolStatus = new HTSSInputField();  //
@@ -66,6 +67,10 @@ public class PanelsEOL extends JPanel implements ActionListener {
     JCheckBox checkBox01 = new JCheckBox("生成二维码");
     JRadioButton radioBtn01 = new JRadioButton("生产模式");
     JRadioButton radioBtn02 = new JRadioButton("自检模式");
+    JRadioButton radioBtn03 = new JRadioButton("返修模式");
+    JRadioButton radioBtn04 = new JRadioButton("11D");
+    JRadioButton radioBtn05 = new JRadioButton("11G");
+    JRadioButton radioBtn06 = new JRadioButton("N/A");
 
     // 网口
     NetPortListener mainPLCListener;
@@ -87,7 +92,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         resetButton.addActionListener(this);
         deviceManageButton.addActionListener(this);
         manualTestButton.addActionListener(this);
-        /*     serialActionListener();*/
+        plcButton.addActionListener(this);
     }
 
     public synchronized boolean getStatus() {
@@ -233,40 +238,17 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         partDataPanel.add(new JLabel());
 
-
         JPanel jrbPanel = new JPanel();
-
         // 创建两个单选按钮
         radioBtn01.setFont(UIConstant.TEXT_FONT);
         radioBtn02.setFont(UIConstant.TEXT_FONT);
+        radioBtn03.setFont(UIConstant.TEXT_FONT);
 
         // 创建按钮组，把两个单选按钮添加到该组
         ButtonGroup btnGroup = new ButtonGroup();
         btnGroup.add(radioBtn01);
         btnGroup.add(radioBtn02);
-
-        // 设置第一个单选按钮选中
-        radioBtn01.setSelected(true);
-
-        jrbPanel.add(radioBtn01);
-        jrbPanel.add(radioBtn02);
-        partDataPanel.add(jrbPanel);
-
-
-        JRadioButton radioBtn03 = new JRadioButton("11D");
-        JRadioButton radioBtn04 = new JRadioButton("11G");
-        radioBtn03.setFont(UIConstant.COPYRIGHT_FONT);
-        radioBtn04.setFont(UIConstant.COPYRIGHT_FONT);
-
-        ButtonGroup btnGroup1 = new ButtonGroup();
-        btnGroup1.add(radioBtn03);
-        btnGroup1.add(radioBtn04);
-        JPanel jrbPanel1 = new JPanel();
-        radioBtn03.setSelected(true);
-
-        jrbPanel1.add(radioBtn03);
-        jrbPanel1.add(radioBtn04);
-        partDataPanel.add(jrbPanel1);
+        btnGroup.add(radioBtn03);
 
         ChangeListener changeListener = new ChangeListener() {
             public void stateChanged(ChangeEvent changEvent) {
@@ -274,27 +256,68 @@ public class PanelsEOL extends JPanel implements ActionListener {
                     checkBox01.setSelected(true);
                     checkBox01.setEnabled(false);
                     manualTestButton.setEnabled(false);
+                    plcButton.setEnabled(true);
                     visualPartNumber.setEnabled(false);
                     textFieldResistorsID.setEnabled(false);
-                    radioBtn03.setEnabled(false);
                     radioBtn04.setEnabled(false);
-                } else if (radioBtn02.isSelected()) { // 生产模式
-                    checkBox01.setEnabled(true);
+                    radioBtn05.setEnabled(false);
+                    radioBtn06.setEnabled(false);
+                    radioBtn06.setSelected(true);
+                } else if (radioBtn02.isSelected()) { // 自检模式
+                    checkBox01.setSelected(false);
+                    checkBox01.setEnabled(false);
                     manualTestButton.setEnabled(true);
+                    plcButton.setEnabled(false);
                     visualPartNumber.setEnabled(false);
                     textFieldResistorsID.setEnabled(true);
-                    radioBtn03.setEnabled(true);
+                    radioBtn04.setEnabled(false);
+                    radioBtn05.setEnabled(false);
+                    radioBtn06.setEnabled(false);
+                    radioBtn06.setSelected(true);
+                } else if (radioBtn03.isSelected()) { // 返修模式
+                    checkBox01.setEnabled(true);
+                    checkBox01.setSelected(true);
+                    manualTestButton.setEnabled(true);
+                    plcButton.setEnabled(true);
+                    visualPartNumber.setEnabled(false);
+                    textFieldResistorsID.setEnabled(true);
                     radioBtn04.setEnabled(true);
+                    radioBtn05.setEnabled(true);
+                    radioBtn06.setEnabled(false);
+                    radioBtn04.setSelected(true);
                 }
             }
         };
 
         radioBtn01.addChangeListener(changeListener);
         radioBtn02.addChangeListener(changeListener);
+        radioBtn03.addChangeListener(changeListener);
 
+        // 设置第一个单选按钮选中
+        radioBtn01.setSelected(true);
+
+        jrbPanel.add(radioBtn01);
+        jrbPanel.add(radioBtn02);
+        jrbPanel.add(radioBtn03);
+        partDataPanel.add(jrbPanel);
+
+        radioBtn04.setFont(UIConstant.COPYRIGHT_FONT);
+        radioBtn05.setFont(UIConstant.COPYRIGHT_FONT);
+        radioBtn06.setFont(UIConstant.COPYRIGHT_FONT);
+
+        ButtonGroup btnGroup1 = new ButtonGroup();
+        btnGroup1.add(radioBtn04);
+        btnGroup1.add(radioBtn05);
+        btnGroup1.add(radioBtn06);
+        JPanel jrbPanel1 = new JPanel();
+        radioBtn06.setSelected(true);
+
+        jrbPanel1.add(radioBtn04);
+        jrbPanel1.add(radioBtn05);
+        jrbPanel1.add(radioBtn06);
+        partDataPanel.add(jrbPanel1);
 
         /*----- 虚拟零件号 ----*/
-
         JPanel panel1 = new JPanel();
         panel1.setLayout(new FlowLayout());
         // panel1.add(Box.createRigidArea(new Dimension(15, 15)));
@@ -544,7 +567,10 @@ public class PanelsEOL extends JPanel implements ActionListener {
         devicesPanel.add(new HTSSLabel("3. 侦听打标机端口"));
         devicesPanel.add(new JLabel());
         devicesPanel.add(new JLabel());
-        devicesPanel.add(new HTSSLabel("4. 侦听主控通信端口"));
+        plcButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
+        JPanel b1Panelp = new JPanel();
+        b1Panelp.add(plcButton);
+        devicesPanel.add(b1Panelp);
         devicesPanel.add(new JLabel());
         return devicesPanel;
     }
@@ -565,120 +591,90 @@ public class PanelsEOL extends JPanel implements ActionListener {
             textFieldResistorsID.setText(UIConstant.EMPTY_STRING);
 
             frameReset();
-        } else if (actionCommand.equals(UIConstant.NETPORT_OPEN)) {
+        } else if (actionCommand.equals(UIConstant.DEVICES_OPEN)) {
             frameReset();
             logger.info("测试开始...");
 
+            // TODO: 打开激光打码机通信端口
             try {
-                printSeverSocket = new ServerSocket(8082);
+                printSeverSocket = new ServerSocket(Integer.parseInt(textFieldLaserPort.getText()));
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            printerListener= new PrinterListener(printSeverSocket);
+            printerListener = new PrinterListener(printSeverSocket);
             System.out.println(printerListener.getSocket());
             printerListener.start();
-            if (!checkInput()) return;
-
-            // 打开主控PLC通信端口
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("textFieldTemp",textFieldTemp);
-            jsonObject.put("visualPartNumber",visualPartNumber);
-            jsonObject.put("textFieldResistorsID",textFieldResistorsID);
-            jsonObject.put("textFieldRt_R25",textFieldRt_R25);
-            jsonObject.put("textFieldRw_R16",textFieldRw_R16);
-            jsonObject.put("textFieldRntc_NTCRValue",textFieldRntc_NTCRValue);
-            jsonObject.put("textFieldTemperature",textFieldTemperature);
-            jsonObject.put("labelResultOne",labelResultOne);
-            jsonObject.put("labelResultTwo",labelResultTwo);
-            jsonObject.put("labelQRCode",labelQRCode);
-            jsonObject.put("mDataView",mDataView);
-            jsonObject.put("eolStatus",eolStatus);
-            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject,printSeverSocket);
-            mainPLCListener.start();
-            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
-
-            // TODO: 打开激光打码机通信端口
-            // laserListener = new NetPortListener(Integer.parseInt(textFieldLaserPort.getText()), null);
-            // laserListener.start();
             mDataView.append(DateUtil.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
 
+            if (!checkInput()) return;
+
+
             // TODO: 初始化电源和测试设备
-            // TODO: 根据初始化结果，显示设备状态
-            // TODO: 以后还要根据测试结果，显示设备状态
+
 
             // 按钮设为"结束测试"
-            deviceManageButton.setText(UIConstant.NETPORT_CLOSE);
-        } else if (actionCommand.equals(UIConstant.NETPORT_CLOSE)) {
-            // 关闭主控PLC通信端口
-            mainPLCListener.closePort();
+            deviceManageButton.setText(UIConstant.DEVICES_CLOSE);
+        } else if (actionCommand.equals(UIConstant.DEVICES_CLOSE)) {
+            // 关闭激光打码机通信端口
             printerListener.closePort();
-            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
-
-            // TODO: 关闭激光打码机通信端口
-            // laserListener.closePort();
             mDataView.append(DateUtil.formatInfo("激光打码机通信端口已关闭......" + getStatus()));
 
             // TODO: 关闭电源，关闭测试设备
 
             // 按钮设为"开始测试"
-            deviceManageButton.setText(UIConstant.NETPORT_OPEN);
+            deviceManageButton.setText(UIConstant.DEVICES_OPEN);
         } else if (actionCommand.equals(UIConstant.MANUAL_TEST)) {
+            String vKey = "";
+            if (radioBtn04.isSelected()) {
+                vKey = vKey + "D";
+            } else {
+                vKey = vKey + "G";
+            }
+
             Calendar cal = GregorianCalendar.getInstance();
-            String virualID = cal.get(Calendar.YEAR) + "" + cal.get(Calendar.MONTH)
-                    + "" + cal.get(Calendar.DATE) + "" + cal.get(Calendar.HOUR) + "" + cal.get(Calendar.MINUTE);
-            visualPartNumber.setText(virualID);
+            vKey = (cal.get(Calendar.YEAR) - 2000) + "";
+            int t = cal.get(Calendar.MONTH) + 1;
+            if (t < 10) {
+                vKey = vKey + "0" + t;
+            } else {
+                vKey = vKey + t;
+            }
+            vKey = vKey + "" + cal.get(Calendar.DATE);
+            visualPartNumber.setText(vKey);
+
+            if ("".equals(textFieldResistorsID.getText())) {
+                mDataView.append(DateUtil.formatInfo("分流器二维码输入有误，请重新输入！"));
+                return;
+            }
+        } else if (actionCommand.equals(UIConstant.PLC_OPEN)) {
+            // 打开主控PLC通信端口
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("textFieldTemp", textFieldTemp);
+            jsonObject.put("visualPartNumber", visualPartNumber);
+            jsonObject.put("textFieldResistorsID", textFieldResistorsID);
+            jsonObject.put("textFieldRt_R25", textFieldRt_R25);
+            jsonObject.put("textFieldRw_R16", textFieldRw_R16);
+            jsonObject.put("textFieldRntc_NTCRValue", textFieldRntc_NTCRValue);
+            jsonObject.put("textFieldTemperature", textFieldTemperature);
+            jsonObject.put("labelResultOne", labelResultOne);
+            jsonObject.put("labelResultTwo", labelResultTwo);
+            jsonObject.put("labelQRCode", labelQRCode);
+            jsonObject.put("mDataView", mDataView);
+            jsonObject.put("eolStatus", eolStatus);
+            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket);
+            mainPLCListener.start();
+            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
+        } else if (actionCommand.equals(UIConstant.PLC_CLOSE)) {
+            // 关闭主控PLC通信端口
+            mainPLCListener.closePort();
+            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
+
+            // 按钮设为"开始测试"
+            deviceManageButton.setText(UIConstant.PLC_OPEN);
         } else {
             logger.error("something wrong boy..." + actionCommand);
         }
     }
-
-/*    private void test() {
-        String vp = visualPartNumber.getText();
-        String factory = null;
-        if (vp.startsWith("D")) {
-            factory = TestConstant.SVW;
-        } else if (vp.startsWith("G")) {
-            factory = TestConstant.FAW;
-        }
-        if (factory == null) return;
-        String cirTemp = textFieldTemp.getText();
-        String id = textFieldResistorsID.getText();
-        *//*ProRecords part = manager.testThePart(factory, Double.parseDouble(cirTemp), id, mDataView, eolStatus, dos);*//*
-
-        //TODO: 拿到结果, 回显
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMaximumFractionDigits(4);
-        textFieldRt_R25.setText(nf.format(part.getR25()));
-        textFieldRw_R16.setText(nf.format(part.getR16()));
-        textFieldRntc_NTCRValue.setText(nf.format(part.getRntc()));
-        textFieldTemperature.setText(nf.format(part.getTntc()));
-        if (part.getProCode() == null || "".equals(part.getProCode())) {
-            labelQRCode.setText("无二维码");
-        } else {
-            labelQRCode.setText(part.getProCode());
-        }
-
-        if ((part.getR25() < 78.25 && part.getR25() > 71.75)) {
-            labelResultOne.setText("合格");
-            labelResultOne.setForeground(Color.green);
-
-        } else {
-            labelResultOne.setText("不合格");
-            labelResultOne.setForeground(Color.red);
-        }
-
-        if (Math.abs(part.getTntc() - Double.parseDouble(cirTemp)) <= 3) {
-            labelResultTwo.setText("合格");
-            labelResultTwo.setForeground(Color.green);
-        } else {
-            labelResultTwo.setText("不合格");
-            labelResultTwo.setForeground(Color.red);
-        }
-
-        mDataView.append(UIConstant.formatInfo("测试结束......"));
-        // logger.info("result testResultVo is: " + part);
-        testStartButton.setEnabled(true);
-    }*/
 
     private void frameReset() {
         logger.debug("信息重置...");
