@@ -107,6 +107,7 @@ public class NetPortListener extends Thread {
                         result.put("ResultValue", resultValue);
                         dos.write(result.toJSONString().getBytes());
                     } else if (jsonObject.getString("Command").equals("TestAPart")) {
+                        eolStatus.set(eolStatus.get());
                         codeField.setText(jsonObject.getString("VirtualPartNumber"));
                         qcField.setText(jsonObject.getString("ResistorID"));
                         KeySightManager keySightManager = new KeySightManager();

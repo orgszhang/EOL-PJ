@@ -140,7 +140,7 @@ public class KeySightManager {
         return result;
     }
 
-    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
+    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID) {
         ProRecords thePart = new ProRecords();
         thePart.setVisualPartNumber(visualPartNumber);
 

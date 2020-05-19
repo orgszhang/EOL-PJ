@@ -23,6 +23,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -76,9 +77,9 @@ public class PanelsEOL extends JPanel implements ActionListener {
     NetPortListener mainPLCListener;
     PrinterListener printerListener;
 
-    // Socket printSocket = null;
+    Socket printSocket = null;
     ServerSocket printSeverSocket = null;
-
+    // 串口
     private JTextArea mDataView = new JTextArea();
 
     private volatile boolean ready = true;
@@ -601,7 +602,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            printerListener = new PrinterListener(printSeverSocket);
+            printerListener= new PrinterListener(printSeverSocket);
             System.out.println(printerListener.getSocket());
             printerListener.start();
             mDataView.append(DateUtil.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
@@ -667,6 +668,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         } else if (actionCommand.equals(UIConstant.PLC_CLOSE)) {
             // 关闭主控PLC通信端口
             mainPLCListener.closePort();
+            printerListener.closePort();
             mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
 
             // 按钮设为"开始测试"
@@ -675,6 +677,54 @@ public class PanelsEOL extends JPanel implements ActionListener {
             logger.error("something wrong boy..." + actionCommand);
         }
     }
+
+/*    private void test() {
+        String vp = visualPartNumber.getText();
+        String factory = null;
+        if (vp.startsWith("D")) {
+            factory = TestConstant.SVW;
+        } else if (vp.startsWith("G")) {
+            factory = TestConstant.FAW;
+        }
+        if (factory == null) return;
+        String cirTemp = textFieldTemp.getText();
+        String id = textFieldResistorsID.getText();
+        *//*ProRecords part = manager.testThePart(factory, Double.parseDouble(cirTemp), id, mDataView, eolStatus, dos);*//*
+
+        //TODO: 拿到结果, 回显
+        NumberFormat nf = NumberFormat.getInstance();
+        nf.setMaximumFractionDigits(4);
+        textFieldRt_R25.setText(nf.format(part.getR25()));
+        textFieldRw_R16.setText(nf.format(part.getR16()));
+        textFieldRntc_NTCRValue.setText(nf.format(part.getRntc()));
+        textFieldTemperature.setText(nf.format(part.getTntc()));
+        if (part.getProCode() == null || "".equals(part.getProCode())) {
+            labelQRCode.setText("无二维码");
+        } else {
+            labelQRCode.setText(part.getProCode());
+        }
+
+        if ((part.getR25() < 78.25 && part.getR25() > 71.75)) {
+            labelResultOne.setText("合格");
+            labelResultOne.setForeground(Color.green);
+
+        } else {
+            labelResultOne.setText("不合格");
+            labelResultOne.setForeground(Color.red);
+        }
+
+        if (Math.abs(part.getTntc() - Double.parseDouble(cirTemp)) <= 3) {
+            labelResultTwo.setText("合格");
+            labelResultTwo.setForeground(Color.green);
+        } else {
+            labelResultTwo.setText("不合格");
+            labelResultTwo.setForeground(Color.red);
+        }
+
+        mDataView.append(UIConstant.formatInfo("测试结束......"));
+        // logger.info("result testResultVo is: " + part);
+        testStartButton.setEnabled(true);
+    }*/
 
     private void frameReset() {
         logger.debug("信息重置...");
