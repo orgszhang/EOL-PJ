@@ -140,7 +140,7 @@ public class KeySightManager {
         return result;
     }
 
-    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID) {
+    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID,JTextArea mDataView,ThreadLocal<String> eolStatus,DataOutputStream dos) {
         ProRecords thePart = new ProRecords();
         thePart.setVisualPartNumber(visualPartNumber);
 
@@ -154,8 +154,8 @@ public class KeySightManager {
         // 循环Test_Time次
         // 按ResistorID和maskID，获得一次Run
         for (int i = 0; i < TestConstant.TEST_TIMES; i++) {
-            TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
-            // TestResults oneTest=  driveDevices(visualPartNumber, cirTemp,mDataView,eolStatus,dos);
+           /* TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);*/
+             TestResults oneTest=  driveDevices(visualPartNumber, cirTemp,mDataView,eolStatus,dos);
             r25 = r25 + oneTest.getR25();
             r16 = r16 + oneTest.getR16();
             rntc = rntc + oneTest.getNtcR();
