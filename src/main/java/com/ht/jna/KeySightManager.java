@@ -140,28 +140,30 @@ public class KeySightManager {
         return result;
     }
 
-    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID,JTextArea mDataView,ThreadLocal<String> eolStatus,DataOutputStream dos) {
+    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID, String qrcode, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
         ProRecords thePart = new ProRecords();
         thePart.setVisualPartNumber(visualPartNumber);
 
         // 获得TestResultsRepo以保存每次测试结果
-        double r25=0;
+        double r25 = 0;
         double r16 = 0;
-        double rntc=0;
+        double rntc = 0;
         boolean judgeResistor = true;
         boolean judgeNTC = true;
 
         // 循环Test_Time次
         // 按ResistorID和maskID，获得一次Run
         for (int i = 0; i < TestConstant.TEST_TIMES; i++) {
-           /* TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);*/
-             TestResults oneTest=  driveDevices(visualPartNumber, cirTemp,mDataView,eolStatus,dos);
+            // TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
+            TestResults oneTest = driveDevices(visualPartNumber, cirTemp, mDataView, eolStatus, dos);
             r25 = r25 + oneTest.getR25();
             r16 = r16 + oneTest.getR16();
             rntc = rntc + oneTest.getNtcR();
             judgeResistor = judgeResistor && oneTest.getResistorOK();
             judgeNTC = judgeNTC && oneTest.getNTC_OK();
         }
+
+        thePart.setResistorID(resistorID);
 
         // 获得25和R16、Rntc的平均值
         double avgR25 = r25 / TestConstant.TEST_TIMES;
@@ -174,7 +176,7 @@ public class KeySightManager {
         thePart.setTntc(TempCalculator.QCalTemp(avgRntc));
 
         if (judgeResistor && judgeNTC) {
-            thePart.setProCode(maintainQRCode(visualPartNumber));
+            thePart.setProCode(maintainQRCode(visualPartNumber, qrcode));
         } else {
             thePart.setProCode(null);
         }
@@ -188,11 +190,15 @@ public class KeySightManager {
         return thePart;
     }
 
-    private String maintainQRCode(String visualPartNumber) {
+    private String maintainQRCode(String visualPartNumber, String qrcode) {
         String factoryID = null;
         if (visualPartNumber.startsWith("D")) {
             factoryID = TestConstant.SVW;
         } else if (visualPartNumber.startsWith("G")) {
+            factoryID = TestConstant.FAW;
+        } else if (TestConstant.SVW.equals(qrcode)) {
+            factoryID = TestConstant.SVW;
+        } else if (TestConstant.FAW.equals(qrcode)) {
             factoryID = TestConstant.FAW;
         } else {
             return null;

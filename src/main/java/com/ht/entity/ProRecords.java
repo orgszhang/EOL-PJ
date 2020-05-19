@@ -1,28 +1,24 @@
 package com.ht.entity;
 
-import com.ht.base.SpringContext;
-import com.ht.repository.LatestQRCodeRepo;
-import com.ht.repository.ProRecordsRepo;
-import lombok.Data;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import javax.persistence.*;
-import java.io.Serializable;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import java.util.Date;
-import java.util.Optional;
 
 /**
  * 测试结果保存
  */
 // @Data
 @Entity
-@Table(name = "latestQRCodes")
+@Table(name = "ProRecords")
 public class ProRecords {
     @Id
     @Column(name = "VisualPartNumber")
     private String visualPartNumber;
 
+    @Column(name = "ResistorID")
+    private String resistorID;   //
     @Column(name = "R25")
     private Double R25;   //
     @Column(name = "R16")
@@ -45,6 +41,14 @@ public class ProRecords {
 
     public String getVisualPartNumber() {
         return this.visualPartNumber;
+    }
+
+    public String getResistorID() {
+        return resistorID;
+    }
+
+    public void setResistorID(String resistorID) {
+        this.resistorID = resistorID;
     }
 
     public Double getR25() {
@@ -107,6 +111,7 @@ public class ProRecords {
     public String toString() {
         return "ProRecords{" +
                 "visualPartNumber='" + visualPartNumber +
+                "', ResistorID='" + resistorID +
                 "', R25=" + R25 +
                 ", R16=" + R16 +
                 ", Rntc=" + Rntc +

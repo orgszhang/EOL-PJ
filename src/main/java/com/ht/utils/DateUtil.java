@@ -1,7 +1,9 @@
 package com.ht.utils;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * @program: eol
@@ -14,6 +16,12 @@ public class DateUtil {
         Date date = new Date();
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
         return format.format(date);
+    }
+
+    public static String createVitualPartNumber() {
+        Calendar cal = GregorianCalendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("yyMMddHHmmss");
+        return format.format(cal.getTime());
     }
 
     public static String formatInfo(String s) {

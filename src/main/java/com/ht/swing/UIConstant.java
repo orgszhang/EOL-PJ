@@ -33,7 +33,7 @@ public final class UIConstant {
 
     public static final Color BGCOLOR_BLUE = new Color(0, 173, 232);
     public static final Color BGCOLOR_GRAY = new Color(160, 160, 160);
-    public static final Color DARK_GREEN = new Color(0, 153, 0);
+    public static final Color DARK_GREEN = new Color(66, 153, 66);
 
     public static final int SCREEN_WIDTH = 1000;
 

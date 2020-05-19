@@ -24,6 +24,7 @@ public class KeySightDevice {
     protected boolean isOpened = false;
     protected boolean isSetVol = false;
     protected boolean isSetEle = false;
+
     protected LongByReference defaultSession;
     protected LongByReference vipSession;
     protected LongByReference VI_ATTR_SUPPRESS_END_EN;
@@ -52,7 +53,6 @@ public class KeySightDevice {
             defaultSession = new LongByReference(59005407);
             int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-                // TODO: 界面上，此设备状态设为Red
                 // TODO: 界面上，TextArea增加一行"不能与设备 + name + 建立通信"
                 // TODO: 通知主控，设备有错
                 return false;
@@ -63,18 +63,15 @@ public class KeySightDevice {
             NativeLong b = new NativeLong(0);
             result = KEYSIGHTINSTANCE.viOpen(a, cmd, b, b, vipSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-                // TODO: 界面上，此设备状态设为Red
                 // TODO: 界面上，TextArea增加一行"不能找到设备 + name + IP"
                 // TODO: 通知主控，设备有错
                 return false;
             }
             logger.info("连接ip=" + ip + "的设备成功");
 
-            // TODO: 界面上，此设备状态设为Green
             // TODO: 界面上，TextArea增加一行"设备 + DefaultDevicesConfig.eleName + 连接成功"
         } catch (Exception e) {
             logger.error(e);
-            // TODO: 界面上，此设备状态设为Red
             // TODO: 通知主控，设备有错
         }
         isOpened = true;
@@ -152,7 +149,6 @@ public class KeySightDevice {
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
             logger.error(result);
             // TODO: 界面上TEXTAREA上显示"'执行命令失败,result=' + result"
-            // TODO: 界面上此设备状态显示为Red
             // TODO: 通知主控，设备有错
             return null;
         }
