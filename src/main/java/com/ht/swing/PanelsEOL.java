@@ -39,8 +39,7 @@ import java.util.List;
 public class PanelsEOL extends JPanel implements ActionListener {
     private static final Log logger = LogFactory.getLog(PanelsEOL.class);
     public static JPanel mainPanel = new JPanel();
-    ThreadLocal<String> eolStatus = ThreadLocal.withInitial(() -> "Busy");
-    KeySightManager manager = new KeySightManager();
+    ThreadLocal<String> eolStatus = ThreadLocal.withInitial(() -> "Reday");
 
     // Buttons
     JButton resetButton = new HTSSButton(UIConstant.RESET_BUTTON);
