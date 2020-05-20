@@ -4,6 +4,7 @@ package com.ht.comm;
 import com.alibaba.fastjson.JSONObject;
 import com.ht.entity.TestResults;
 import com.ht.jna.KeySightManager;
+import com.ht.jna.TcpClient;
 import com.ht.printer.PrinterListener;
 import com.ht.utils.DateUtil;
 import org.apache.commons.logging.Log;
@@ -17,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Scanner;
 
 //123
@@ -105,10 +107,17 @@ public class NetPortListener extends Thread {
                         codeField.setText(jsonObject.getString("VirtualPartNumber"));
                         qcField.setText(jsonObject.getString("ResistorID"));
                         KeySightManager keySightManager = new KeySightManager(); // TODO: ERROR
+
+                        // 开电源
+                        TcpClient client = new TcpClient();
+                        mDataView.append(new Date() + " - 测试开始 ...\r\n");
+                        client.open();
 /*
                     ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("code"), Double.valueOf(temp.getText()), jsonObject.getString("qc"),mDataView,eolStatus,dos);
 */
                         TestResults proRecords = keySightManager.pseudoDriveDevices(jsonObject.getString("code"), Double.valueOf(temp.getText()));
+                        client.close();
+
                         /*       jsonObject.getString("qc"), mDataView, eolStatus, dos);*/
                         textFieldRt_R25.setText(String.valueOf(proRecords.getR25()));
                         textFieldRw_R16.setText(String.valueOf(proRecords.getR16()));

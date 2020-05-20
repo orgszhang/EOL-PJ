@@ -192,11 +192,11 @@ public class KeySightManager {
 
     private String maintainQRCode(String visualPartNumber, String qrcode) {
         String factoryID = null;
-        if (visualPartNumber.startsWith("D")) {
+        if (visualPartNumber.startsWith("D")) { // 来自生产模式
             factoryID = TestConstant.SVW;
         } else if (visualPartNumber.startsWith("G")) {
             factoryID = TestConstant.FAW;
-        } else if (TestConstant.SVW.equals(qrcode)) {
+        } else if (TestConstant.SVW.equals(qrcode)) { // 来自自检模式
             factoryID = TestConstant.SVW;
         } else if (TestConstant.FAW.equals(qrcode)) {
             factoryID = TestConstant.FAW;
