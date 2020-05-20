@@ -34,7 +34,7 @@ public class KeySightManager {
 
         KeySightManager manager = new KeySightManager();
         manager.initDevices();
- /*       TestResults result = manager.driveDevices(resistorID, cirTemp, mDataView, eolStatus);*/
+        /*       TestResults result = manager.driveDevices(resistorID, cirTemp, mDataView, eolStatus);*/
         manager.closeDivices();
     }
 
@@ -90,19 +90,19 @@ public class KeySightManager {
         Electricity = Double.valueOf(keySightDeviceElectricity.readResult());
         NTC = Double.valueOf(keySightDeviceNtc.readResult());
 
-        return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp);
+        return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp, mDataView);
     }
 
     public TestResults pseudoDriveDevices(String visualPartNumber, double cirTemp) {
-        double Electricity = Math.random()/10 + 4.3; //电流
+        double Electricity = Math.random() / 10 + 4.3; //电流
         double Voltage = Math.random() / 100 + 0.32; //电压
-        double voltagev16 = Math.random() /100 + 0.32;  //电压
+        double voltagev16 = Math.random() / 100 + 0.32;  //电压
         double NTC = 10000 * (1 + Math.random() / 100); //NTC电阻
-
-        return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp);
+        return new TestResults();
+        /*return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp);*/
     }
 
-    private TestResults saveTestResult(String visualPartNumber, double Electricity, double Voltage, double voltagev16, double NTC, double cirTemp) {
+    private TestResults saveTestResult(String visualPartNumber, double Electricity, double Voltage, double voltagev16, double NTC, double cirTemp, JTextArea mDataView) {
         TestResults result = new TestResults();
 
         result.setVisualPartNumber(visualPartNumber);
@@ -113,7 +113,7 @@ public class KeySightManager {
         result.setV16(voltagev16);
         result.setR16(voltagev16 / Electricity * 1000);  // 16 rw
 
-        if ((Math.abs(r25 - TestConstant.RESISTOR_EXP)/ TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE) {
+        if ((Math.abs(r25 - TestConstant.RESISTOR_EXP) / TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE) {
             result.setResistorOK(true);
         } else {
             result.setResistorOK(false);
@@ -134,6 +134,7 @@ public class KeySightManager {
             TestResultsRepo rRepo = SpringContext.getBean(TestResultsRepo.class);
             rRepo.save(result);
         } catch (Exception e) {
+            mDataView.append("数据库异常，请检查连接！");
             logger.error("Save ProRecordsRepo to DB error. ", e);
         }
 
@@ -185,7 +186,12 @@ public class KeySightManager {
         thePart.setComments(resistorID);
 
         ProRecordsRepo repo = SpringContext.getBean(ProRecordsRepo.class);
-        repo.save(thePart);
+        try {
+            repo.save(thePart);
+        } catch (Exception e) {
+            mDataView.append("数据库异常，请检查连接！");
+        }
+
 
         return thePart;
     }

@@ -2,6 +2,7 @@ package com.ht.comm;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.ht.entity.ProRecords;
 import com.ht.entity.TestResults;
 import com.ht.jna.KeySightManager;
 import com.ht.printer.PrinterListener;
@@ -105,15 +106,12 @@ public class NetPortListener extends Thread {
                         codeField.setText(jsonObject.getString("VirtualPartNumber"));
                         qcField.setText(jsonObject.getString("ResistorID"));
                         KeySightManager keySightManager = new KeySightManager(); // TODO: ERROR
-/*
-                    ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("code"), Double.valueOf(temp.getText()), jsonObject.getString("qc"),mDataView,eolStatus,dos);
-*/
-                        TestResults proRecords = keySightManager.pseudoDriveDevices(jsonObject.getString("code"), Double.valueOf(temp.getText()));
-                        /*       jsonObject.getString("qc"), mDataView, eolStatus, dos);*/
-                        textFieldRt_R25.setText(String.valueOf(proRecords.getR25()));
-                        textFieldRw_R16.setText(String.valueOf(proRecords.getR16()));
-                        textFieldRntc_NTCRValue.setText(String.valueOf(proRecords.getNtcT()));
-                        textFieldTemperature.setText(String.valueOf(proRecords.getNtcT()).toString());
+                        ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("VirtualPartNumber"), Double.valueOf(textFieldTemperature.getText()), qcField.getText(),null, mDataView, eolStatus, dos);
+
+                        textFieldRt_R25.setText(proRecords.getR25().toString());
+                        textFieldRw_R16.setText(proRecords.getR16().toString());
+                        textFieldRntc_NTCRValue.setText(proRecords.getRntc().toString());
+                        textFieldTemperature.setText(proRecords.getTntc().toString());
                         if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
                             labelResultOne.setText("合格");
                             labelResultOne.setForeground(Color.green);
@@ -123,15 +121,14 @@ public class NetPortListener extends Thread {
                             labelResultOne.setForeground(Color.red);
                         }
 
-                        if (Math.abs(proRecords.getNtcT() - Double.valueOf(temp.getText())) <= 3) {
+                        if (Math.abs(proRecords.getTntc() - Double.valueOf(temp.getText())) <= 3) {
                             labelResultTwo.setText("合格");
                             labelResultTwo.setForeground(Color.green);
                         } else {
                             labelResultTwo.setText("不合格");
                             labelResultTwo.setForeground(Color.red);
                         }
-                        labelQRCode.setText("#11D915743  000###*1GU D5V AABAUI3*#");
-                        //这里发送给printerSocket客户端----------------------------------------------
+                        labelQRCode.setText(proRecords.getProCode());                        //这里发送给printerSocket客户端----------------------------------------------
                         Socket socketPrint = new PrinterListener().getSocket();
                         DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
                         /*dosPrint.write(proRecords.getProCode().getBytes());*/
