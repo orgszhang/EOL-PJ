@@ -27,16 +27,16 @@ public class KeySightManager {
     KeySightDevice_Electricity keySightDeviceElectricity;
     KeySightDevice_NTC keySightDeviceNtc;
 
-    public static void main(String[] args) {
+/*    public static void main(String[] args) {
         double cirTemp = 15; // 环境温度
         String resistorID = "20203010282";
         String key = "11D915743";
 
         KeySightManager manager = new KeySightManager();
         manager.initDevices();
-        /*       TestResults result = manager.driveDevices(resistorID, cirTemp, mDataView, eolStatus);*/
+        *//*       TestResults result = manager.driveDevices(resistorID, cirTemp, mDataView, eolStatus);*//*
         manager.closeDivices();
-    }
+    }*/
 
     public void initDevices() {
         //每一个六位半对应一个class

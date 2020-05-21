@@ -11,13 +11,13 @@ import java.util.Date;
  */
 // @Data
 @Entity
-@Table(name = "ProRecords")
+@Table(name = "prorecords")
 public class ProRecords {
     @Id
-    @Column(name = "VisualPartNumber")
+    @Column(name = "visual_part_number")
     private String visualPartNumber;
 
-    @Column(name = "ResistorID")
+    @Column(name = "resistor_id")
     private String resistorID;   //
     @Column(name = "R25")
     private Double R25;   //
@@ -28,11 +28,11 @@ public class ProRecords {
     @Column(name = "TNTC")
     private Double Tntc;
 
-    @Column(name = "QRCode")
+    @Column(name = "qr_code")
     private String qrCode; // QRCode 二维码
-    @Column(name = "ProDate")
+    @Column(name = "pro_date")
     private Date proDate; //
-    @Column(name = "Comments")
+    @Column(name = "comments")
     private String comments;
 
     public void setVisualPartNumber(String visualPartNumber) {

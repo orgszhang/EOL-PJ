@@ -2,13 +2,19 @@ package com.ht.comm;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.ht.base.SpringContext;
 import com.ht.entity.ProRecords;
-import com.ht.entity.TestResults;
 import com.ht.jna.KeySightManager;
 import com.ht.printer.PrinterListener;
+import com.ht.repository.ProRecordsRepo;
+import com.ht.repository.TestResultsRepo;
 import com.ht.utils.DateUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,9 +45,10 @@ public class NetPortListener extends Thread {
     ThreadLocal<String> eolStatus;
     ServerSocket printSeverSocket;
     Socket printSocket;
+    KeySightManager keySightManager;
 
 
-    public NetPortListener(int port, JSONObject jsonObject, ServerSocket printSeverSocket) {
+    public NetPortListener(int port, JSONObject jsonObject, ServerSocket printSeverSocket, KeySightManager keySightManager) {
         try {
             server = new ServerSocket(port);
             this.codeField = (JTextField) jsonObject.get("visualPartNumber");
@@ -60,6 +67,7 @@ public class NetPortListener extends Thread {
             this.mDataView = (JTextArea) jsonObject.get("mDataView");
             this.eolStatus = (ThreadLocal<String>) jsonObject.get("eolStatus");
             this.printSeverSocket = printSeverSocket;
+            this.keySightManager = keySightManager;
         } catch (IOException e) {
             logger.warn(e);
         }
@@ -102,12 +110,11 @@ public class NetPortListener extends Thread {
                         result.put("ResultValue", resultValue);
                         dos.write(result.toJSONString().getBytes());
                     } else if (jsonObject.getString("Command").equals("TestAPart")) {
-                        eolStatus.set(eolStatus.get());
-                        codeField.setText(jsonObject.getString("VirtualPartNumber"));
-                        qcField.setText(jsonObject.getString("ResistorID"));
-                        KeySightManager keySightManager = new KeySightManager(); // TODO: ERROR
-                        ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("VirtualPartNumber"), Double.valueOf(textFieldTemperature.getText()), qcField.getText(),null, mDataView, eolStatus, dos);
-
+                        eolStatus.set("Busy");
+                        JSONObject params=JSONObject.parseObject(jsonObject.get("Parameter").toString());
+                        codeField.setText(params.getString("VirtualPartNumber"));
+                        qcField.setText(params.getString("ResistorID"));
+                        ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("VirtualPartNumber"), Double.valueOf(temp.getText()), qcField.getText(), null, mDataView, eolStatus, dos);
                         textFieldRt_R25.setText(proRecords.getR25().toString());
                         textFieldRw_R16.setText(proRecords.getR16().toString());
                         textFieldRntc_NTCRValue.setText(proRecords.getRntc().toString());
@@ -128,18 +135,52 @@ public class NetPortListener extends Thread {
                             labelResultTwo.setText("不合格");
                             labelResultTwo.setForeground(Color.red);
                         }
-                        labelQRCode.setText(proRecords.getProCode());                        //这里发送给printerSocket客户端----------------------------------------------
+                        labelQRCode.setText(proRecords.getProCode());
+                       /* JSONObject result = new JSONObject();
+                        result.put("Command", "TestAPart");
+                        String jsonStr = JSONObject.toJSONString(proRecords);
+                        JSONObject js=JSONObject.parseObject(jsonStr);
+                      *//*  if(StringUtils.isNotEmpty(proRecords.getProCode())) {
+                            js.put("testResult", "success");
+                        }else {
+                            js.put("testResult", "fail");
+                        }*//*
+                        result.put("ResultValue", js);
+                        dos.write(result.toJSONString().getBytes());*/
+
+                        //这里发送给printerSocket客户端----------------------------------------------
                         Socket socketPrint = new PrinterListener().getSocket();
-                        DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
-                        /*dosPrint.write(proRecords.getProCode().getBytes());*/
-                        String json = "#11D915743  000###*1GU D5V AABAUI3*#";
-                        /*    dosPrint.write(json.getBytes());*/
-                        System.out.println(json);
+                        if(StringUtils.isNotEmpty(proRecords.getProCode())){
+                            DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
+                            String json = proRecords.getProCode();
+                            dosPrint.write(json.getBytes());
+                        }
 
                     } else if (jsonObject.getString("Command").equals("QueryResult")) {
+                        JSONObject params=JSONObject.parseObject(jsonObject.get("Parameter").toString());
+                        ProRecords proRecords=new ProRecords();
+                        try {
+                            ProRecordsRepo rRepo = SpringContext.getBean(ProRecordsRepo.class);
+                            proRecords.setVisualPartNumber(params.getString("VirtualPartNumber"));
+                            Example<ProRecords> resultOne=Example.of(proRecords);
+                            proRecords=rRepo.findOne(resultOne).get();
+                        } catch (Exception e) {
+                            mDataView.append("数据库异常，请检查连接！");
+                            proRecords=null;
+                        }
+                        if(null==proRecords || StringUtils.isEmpty(proRecords.getProCode())){
+                           JSONObject jsonObj=new JSONObject();
+                           jsonObj.put("testResult","fail");
+                            dos.write(jsonObj.toJSONString().getBytes());
+                        }else {
+                            String str=JSONObject.toJSONString(proRecords);
+                            JSONObject json=JSONObject.parseObject(str);
+                            json.put("testResult","success");
+                            dos.write(json.toJSONString().getBytes());
+                        }
 
                     } else if (jsonObject.getString("Command").equals("DataSaved")) {
-
+                        eolStatus.set("Ready");
                     }
                     this.notify();
                 }

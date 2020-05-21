@@ -1,19 +1,23 @@
 package com.ht.entity;
 
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
 // @Data
 @Entity
-@Table(name = "shuntResistors")
+@Table(name = "shuntresistors")
 public class ShuntResistors {
 
     @Id
     private String id;
+    @Column(name = "rvalue")
     private float rValue;
+    @Column(name = "rValid")
     private boolean rValid;
+    @Column(name = "usedBy")
     private String usedBy;
 
     public String getID() {

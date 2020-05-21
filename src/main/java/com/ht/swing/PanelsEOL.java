@@ -635,7 +635,6 @@ public class PanelsEOL extends JPanel implements ActionListener {
                 e1.printStackTrace();
             }
             printerListener = new PrinterListener(printSeverSocket);
-            mDataView.append(printerListener.getSocket().toString());
             printerListener.setStatus(mDataView);
             printerListener.start();
             mDataView.append(DateUtil.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
@@ -681,7 +680,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("labelQRCode", labelQRCode);
             jsonObject.put("mDataView", mDataView);
             jsonObject.put("eolStatus", eolStatus);
-            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket);
+            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket,manager);
             mainPLCListener.start();
             mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
         } else if (actionCommand.equals(UIConstant.PLC_CLOSE)) {

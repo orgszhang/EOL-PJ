@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets;
 
 public class PrinterListener extends Thread {
     private static final Log logger = LogFactory.getLog(NetPortListener.class);
-    public Socket socket = null;
+    private  static Socket socket = null;
     public Boolean isConnect = false;
     ServerSocket server = null;
 
@@ -24,8 +24,12 @@ public class PrinterListener extends Thread {
     public PrinterListener(ServerSocket serverSocket) {
         this.server = serverSocket;
     }
-
-    public PrinterListener() {
+    public  PrinterListener() {
+        try {
+            server = new ServerSocket(8082);
+        } catch (IOException e) {
+            logger.warn(e);
+        }
     }
 
     public void setStatus(JTextArea status) {
@@ -74,7 +78,7 @@ public class PrinterListener extends Thread {
             this.setSocket(socket);
             this.setConnect(true);
             // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-            // System.out.println(DateUtil.formatInfo("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功..."));
+             System.out.println(DateUtil.formatInfo("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功..."));
 
             InputStream in = socket.getInputStream();
             int len = 0;
