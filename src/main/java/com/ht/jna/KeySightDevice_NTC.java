@@ -3,12 +3,14 @@ package com.ht.jna;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
 import java.io.DataOutputStream;
 
 public class KeySightDevice_NTC {
-
+    private static final Log logger = LogFactory.getLog(KeySightDevice_NTC.class);
     private KeySightVic_NTC KEYSIGHTINSTANCE;
 
     private boolean isOpened = false;
@@ -24,7 +26,7 @@ public class KeySightDevice_NTC {
     }
 
 
-    public boolean open() {
+    public boolean open(JTextArea mDataView) {
         if (isOpened) {
             return true;
         }
@@ -46,6 +48,7 @@ public class KeySightDevice_NTC {
             defaultSession = new LongByReference(59005407);
         int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+            mDataView.append("KeySightDevice_NTC open  error ...");
             return false;
         }
         vipSession = new LongByReference(0);
@@ -60,6 +63,7 @@ public class KeySightDevice_NTC {
         }
             System.out.println("连接ip="+rIp+"的设备成功");
         } catch (Exception e) {
+            logger.debug(e.getMessage());
             e.printStackTrace();
         }
         isOpened = true;
@@ -107,6 +111,7 @@ public class KeySightDevice_NTC {
         int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
             System.out.println("NTC - 执行命令"+ cmdStr + "失败，result=" + result);
+            mDataView.append("NTC - 执行命令"+ cmdStr + "失败，result=" + result);
         }
         return true;
     }
@@ -116,6 +121,7 @@ public class KeySightDevice_NTC {
         Memory mem = new Memory(200);
         int result = KEYSIGHTINSTANCE.viScanf(a, "%t", mem);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+
             System.out.println(result);
             return null;
         }

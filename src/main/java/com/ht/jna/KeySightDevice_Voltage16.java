@@ -3,6 +3,8 @@ package com.ht.jna;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
 import java.io.DataOutputStream;
@@ -11,7 +13,7 @@ import java.io.DataOutputStream;
  * 16
  */
 public class KeySightDevice_Voltage16 {
-
+    private static final Log logger = LogFactory.getLog(KeySightDevice_Voltage16.class);
     private KeySightVci_Voltage KEYSIGHTINSTANCE;
 
     private boolean isOpened = false;
@@ -26,7 +28,7 @@ public class KeySightDevice_Voltage16 {
         KEYSIGHTINSTANCE = KeySightVci_Voltage.KEYSIGHTINSTANCE;
     }
 
-    public boolean open() {
+    public boolean open(JTextArea mDataView) {
         if (isOpened) {
             return true;
         }
@@ -53,10 +55,13 @@ public class KeySightDevice_Voltage16 {
             result = KEYSIGHTINSTANCE.viOpen(a, cmd, b, b, vipSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
                 System.out.println("连接 1-6 的设备失败");
+                mDataView.append("KeySightDevice_Voltage16 open  error ...");
+
                 return false;
             }
             System.out.println("连接ip=" + curIp + "的设备成功");
         } catch (Exception e) {
+            logger.debug(e.getMessage());
             e.printStackTrace();
         }
         isOpened = true;
@@ -106,11 +111,15 @@ public class KeySightDevice_Voltage16 {
     public Boolean writeCmd(String cmdStr, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
 //        VI_ATTR_SUPPRESS_END_EN();
 //        VI_ATTR_TERMCHAR_EN();
-        NativeLong a = new NativeLong(vipSession.getValue());
-        int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
-        if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println("V16 - 执行命令"+ cmdStr + "失败，result=" + result);
-        }
+
+            NativeLong a = new NativeLong(vipSession.getValue());
+            int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
+            if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+                System.out.println("V16 - 执行命令" + cmdStr + "失败，result=" + result);
+                mDataView.append("V16 - 执行命令" + cmdStr + "失败，result=" + result);
+            }
+
+
         return true;
     }
 
@@ -120,7 +129,7 @@ public class KeySightDevice_Voltage16 {
             return true;
         }
         // if (writeCmd("FUNC \"VOLT:DC\"") && writeCmd("VOLT:RANG 10")) {
-        if (writeCmd("CONF:VOLT:DC 0.1", null, null,null) /*&& writeCmd("CONF:VOLT 0.1")*/) {
+        if (writeCmd("CONF:VOLT:DC 0.1", null, null, null) /*&& writeCmd("CONF:VOLT 0.1")*/) {
             System.out.println("设置为DC电压模式");
             isSetVol = true;
             try {

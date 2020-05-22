@@ -7,14 +7,11 @@ import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
 import com.ht.printer.PrinterListener;
 import com.ht.repository.ProRecordsRepo;
-import com.ht.repository.TestResultsRepo;
 import com.ht.utils.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
-
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,6 +19,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -48,9 +46,17 @@ public class NetPortListener extends Thread {
     KeySightManager keySightManager;
 
 
-    public NetPortListener(int port, JSONObject jsonObject, ServerSocket printSeverSocket, KeySightManager keySightManager) {
+    public NetPortListener(String ipMainPLC,int port, JSONObject jsonObject, ServerSocket printSeverSocket, KeySightManager keySightManager) {
         try {
-            server = new ServerSocket(port);
+
+            String[] ipStr = ipMainPLC.split("\\.");
+            byte[] ipBuf = new byte[4];
+            for(int i = 0; i < 4; i++){
+                ipBuf[i] = (byte)(Integer.parseInt(ipStr[i])&0xff);
+            }
+
+            InetAddress inetAddresd=InetAddress.getByAddress(ipBuf);
+            server = new ServerSocket(port,5,inetAddresd);
             this.codeField = (JTextField) jsonObject.get("visualPartNumber");
             this.qcField = (JTextField) jsonObject.get("textFieldResistorsID");
             this.temp = (JTextField) jsonObject.get("textFieldTemp");
@@ -92,6 +98,7 @@ public class NetPortListener extends Thread {
             socket = server.accept();
             new sendMessThread().start();// 连接并返回socket后，再启用发送消息线程
             System.out.println(DateUtil.getDate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
+            logger.info(DateUtil.getDate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
             InputStream in = socket.getInputStream();
             int len = 0;
             byte[] buf = new byte[1024];
@@ -109,9 +116,9 @@ public class NetPortListener extends Thread {
                         resultValue.put("EolStatus", eolStatus.get());
                         result.put("ResultValue", resultValue);
                         dos.write(result.toJSONString().getBytes());
-                    } else if (jsonObject.getString("Command").equals("TestAPart")) {
+                    } else if (jsonObject.getString("Command").equals("StartTest")) {
                         eolStatus.set("Busy");
-                        JSONObject params=JSONObject.parseObject(jsonObject.get("Parameter").toString());
+                        JSONObject params = JSONObject.parseObject(jsonObject.get("Parameter").toString());
                         codeField.setText(params.getString("VirtualPartNumber"));
                         qcField.setText(params.getString("ResistorID"));
                         ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("VirtualPartNumber"), Double.valueOf(temp.getText()), qcField.getText(), null, mDataView, eolStatus, dos);
@@ -136,51 +143,62 @@ public class NetPortListener extends Thread {
                             labelResultTwo.setForeground(Color.red);
                         }
                         labelQRCode.setText(proRecords.getProCode());
-                       /* JSONObject result = new JSONObject();
-                        result.put("Command", "TestAPart");
-                        String jsonStr = JSONObject.toJSONString(proRecords);
-                        JSONObject js=JSONObject.parseObject(jsonStr);
-                      *//*  if(StringUtils.isNotEmpty(proRecords.getProCode())) {
-                            js.put("testResult", "success");
-                        }else {
-                            js.put("testResult", "fail");
-                        }*//*
-                        result.put("ResultValue", js);
-                        dos.write(result.toJSONString().getBytes());*/
+
 
                         //这里发送给printerSocket客户端----------------------------------------------
-                        Socket socketPrint = new PrinterListener().getSocket();
-                        if(StringUtils.isNotEmpty(proRecords.getProCode())){
-                            DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
-                            String json = proRecords.getProCode();
-                            dosPrint.write(json.getBytes());
+                        if (null != proRecords && null != proRecords.getProCode()) {
+                            Socket socketPrint = new PrinterListener().getSocket();
+                            if (StringUtils.isNotEmpty(proRecords.getProCode())) {
+                                DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
+                                String json = proRecords.getProCode();
+                                dosPrint.write(json.getBytes());
+                            }
                         }
-
+                        JSONObject result = new JSONObject();
+                        result.put("Command", "StartTest");
+                        String jsonStr = JSONObject.toJSONString(proRecords);
+                        JSONObject js = JSONObject.parseObject(jsonStr);
+                        js.put("EolStatus", eolStatus.get());
+                        result.put("ResultValue", js);
+                        dos.write(result.toJSONString().getBytes());
                     } else if (jsonObject.getString("Command").equals("QueryResult")) {
-                        JSONObject params=JSONObject.parseObject(jsonObject.get("Parameter").toString());
-                        ProRecords proRecords=new ProRecords();
+                        JSONObject params = JSONObject.parseObject(jsonObject.get("Parameter").toString());
+                        ProRecords proRecords = new ProRecords();
                         try {
                             ProRecordsRepo rRepo = SpringContext.getBean(ProRecordsRepo.class);
                             proRecords.setVisualPartNumber(params.getString("VirtualPartNumber"));
-                            Example<ProRecords> resultOne=Example.of(proRecords);
-                            proRecords=rRepo.findOne(resultOne).get();
+                            Example<ProRecords> resultOne = Example.of(proRecords);
+                            proRecords = rRepo.findOne(resultOne).get();
                         } catch (Exception e) {
                             mDataView.append("数据库异常，请检查连接！");
-                            proRecords=null;
+                            proRecords = null;
                         }
-                        if(null==proRecords || StringUtils.isEmpty(proRecords.getProCode())){
-                           JSONObject jsonObj=new JSONObject();
-                           jsonObj.put("testResult","fail");
-                            dos.write(jsonObj.toJSONString().getBytes());
-                        }else {
-                            String str=JSONObject.toJSONString(proRecords);
-                            JSONObject json=JSONObject.parseObject(str);
-                            json.put("testResult","success");
+                        JSONObject result = new JSONObject();
+                        result.put("Command", "SetStatus");
+                        JSONObject js = new JSONObject();
+                        js.put("EolStatus", eolStatus.get());
+                        if (null == proRecords || StringUtils.isEmpty(proRecords.getProCode())) {
+
+                            js.put("testResult", "fail");
+                            result.put("ResultValue", js);
+                            dos.write(result.toJSONString().getBytes());
+                        } else {
+                            String str = JSONObject.toJSONString(proRecords);
+                            JSONObject json = JSONObject.parseObject(str);
+                            json.put("testResult", "success");
+                            js.putAll(json);
+                            result.put("ResultValue", js);
                             dos.write(json.toJSONString().getBytes());
                         }
 
-                    } else if (jsonObject.getString("Command").equals("DataSaved")) {
+                    } else if (jsonObject.getString("Command").equals("SetStatus")) {
                         eolStatus.set("Ready");
+                        JSONObject result = new JSONObject();
+                        result.put("Command", "SetStatus");
+                        JSONObject js = new JSONObject();
+                        js.put("EolStatus", eolStatus.get());
+                        result.put("ResultValue", js);
+                        dos.write(result.toJSONString().getBytes());
                     }
                     this.notify();
                 }

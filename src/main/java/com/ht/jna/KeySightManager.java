@@ -38,7 +38,7 @@ public class KeySightManager {
         manager.closeDivices();
     }*/
 
-    public void initDevices() {
+    public void initDevices(JTextArea mDataView) {
         //每一个六位半对应一个class
         keySightDeviceVoltage = new KeySightDevice_Voltage();
         keySightDeviceVoltage16 = new KeySightDevice_Voltage16();
@@ -46,10 +46,10 @@ public class KeySightManager {
         keySightDeviceNtc = new KeySightDevice_NTC();
 
         //分别打开三台设备
-        keySightDeviceVoltage.open();
-        keySightDeviceVoltage16.open();
-        keySightDeviceElectricity.open();
-        keySightDeviceNtc.open();
+        keySightDeviceVoltage.open(mDataView);
+        keySightDeviceVoltage16.open(mDataView);
+        keySightDeviceElectricity.open(mDataView);
+        keySightDeviceNtc.open(mDataView);
 
         //分别设置设备的量程
         keySightDeviceVoltage.setVolCONF();
@@ -85,8 +85,8 @@ public class KeySightManager {
         keySightDeviceElectricity.writeCmd("READ?", mDataView, eolStatus, dos);
         keySightDeviceNtc.writeCmd("READ?", mDataView, eolStatus, dos);
 
-        Voltage = Double.valueOf(keySightDeviceVoltage.readResult());
-        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult());
+        Voltage = Double.valueOf(keySightDeviceVoltage.readResult())*1000;
+        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult())*1000;
         Electricity = Double.valueOf(keySightDeviceElectricity.readResult());
         NTC = Double.valueOf(keySightDeviceNtc.readResult());
 

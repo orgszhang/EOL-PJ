@@ -3,12 +3,15 @@ package com.ht.jna;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
 import java.io.DataOutputStream;
-
+@Slf4j
 public class KeySightDevice_Voltage {
-
+    private static final Log logger = LogFactory.getLog(KeySightDevice_Voltage.class);
     private KeySightVci_Voltage KEYSIGHTINSTANCE;
 
     private boolean isOpened = false;
@@ -24,7 +27,7 @@ public class KeySightDevice_Voltage {
     }
 
 
-    public boolean open() {
+    public boolean open(JTextArea mDataView) {
         System.out.println("KeySightDevice_Voltage open ...");
         if (isOpened) {
             return true;
@@ -41,6 +44,7 @@ public class KeySightDevice_Voltage {
             defaultSession = new LongByReference(59005407);
             int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+                mDataView.append("KeySightDevice_Voltage open  error ...");
                 return false;
             }
             vipSession = new LongByReference(0);
@@ -56,6 +60,7 @@ public class KeySightDevice_Voltage {
             System.out.println("连接ip=" + curIp + "的设备成功");
         } catch (Exception e) {
             System.out.println("KeySightDevice_Voltage open  error ...");
+            logger.debug(e.getMessage());
             e.printStackTrace();
         }
         isOpened = true;
@@ -106,11 +111,15 @@ public class KeySightDevice_Voltage {
     public Boolean writeCmd(String cmdStr, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
 //        VI_ATTR_SUPPRESS_END_EN();
 //        VI_ATTR_TERMCHAR_EN();
+
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println("V25 - 执行命令"+ cmdStr + "失败，result=" + result);
+            System.out.println("V25 - 执行命令" + cmdStr + "失败，result=" + result);
+            mDataView.append("V25 - 执行命令" + cmdStr + "失败，result=" + result);
         }
+
+
         return true;
     }
 

@@ -79,7 +79,7 @@ public class PrinterListener extends Thread {
             this.setConnect(true);
             // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
              System.out.println(DateUtil.formatInfo("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功..."));
-
+           logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
             InputStream in = socket.getInputStream();
             int len = 0;
             byte[] buf = new byte[1024];

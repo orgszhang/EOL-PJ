@@ -79,6 +79,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
     NetPortListener mainPLCListener;
     PrinterListener printerListener;
     ServerSocket printSeverSocket = null;
+    String ipMainPLC;
     // Socket printSocket = null;
     private JTextArea mDataView = new JTextArea();
 
@@ -540,6 +541,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
             }
 
             if ("MainPLC".equals(item.getDevice())) {
+                ipMainPLC = item.getIpAddress();
+
                 JPanel jp1 = new JPanel(new GridBagLayout());
                 textFieldMainPLCPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
                 textFieldMainPLCPort.setHorizontalAlignment(0);
@@ -620,7 +623,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
             logger.info("连接测试设备......");
             // 初始化电源和测试设备
-            manager.initDevices();
+            manager.initDevices(mDataView);
             mDataView.append(DateUtil.formatInfo("已连接测试设备......"));
 
             // 连接电源
@@ -680,7 +683,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("labelQRCode", labelQRCode);
             jsonObject.put("mDataView", mDataView);
             jsonObject.put("eolStatus", eolStatus);
-            mainPLCListener = new NetPortListener(Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket,manager);
+
+            mainPLCListener = new NetPortListener(ipMainPLC,Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket,manager);
             mainPLCListener.start();
             mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
         } else if (actionCommand.equals(UIConstant.PLC_CLOSE)) {
