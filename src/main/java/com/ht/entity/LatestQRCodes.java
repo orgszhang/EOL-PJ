@@ -12,13 +12,13 @@ import javax.persistence.Table;
 
 //@Data
 @Entity
-@Table(name = "latestqrcodes")
+@Table(name = "latestqrcode")
 public class LatestQRCodes {
     private static final Log logger = LogFactory.getLog(LatestQRCodes.class);
 
-    @Column(name = "CustomerPartNo")
+    @Column(name = "customer_part_no")
     private String customerPartNo;
-    @Column(name = "LatestQRCode")
+    @Column(name = "latestqrcode")
     private String latestQRCode;
 
     @Id

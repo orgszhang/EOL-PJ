@@ -15,21 +15,27 @@ import java.nio.charset.StandardCharsets;
 
 public class PrinterListener extends Thread {
     private static final Log logger = LogFactory.getLog(NetPortListener.class);
-    private  static Socket socket = null;
+    private static Socket socket = null;
     public Boolean isConnect = false;
     ServerSocket server = null;
-
+    JTextArea mDataView = null;
     JTextArea status;
 
     public PrinterListener(ServerSocket serverSocket) {
         this.server = serverSocket;
     }
-    public  PrinterListener() {
+
+    public PrinterListener() {
         try {
             server = new ServerSocket(8082);
         } catch (IOException e) {
             logger.warn(e);
         }
+    }
+
+    public PrinterListener(ServerSocket printSeverSocket, JTextArea mDataView) {
+        this.server = printSeverSocket;
+        this.mDataView=mDataView;
     }
 
     public void setStatus(JTextArea status) {
@@ -78,8 +84,8 @@ public class PrinterListener extends Thread {
             this.setSocket(socket);
             this.setConnect(true);
             // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-             System.out.println(DateUtil.formatInfo("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功..."));
-           logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
+            System.out.println(DateUtil.formatInfo("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功..."));
+            logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
             InputStream in = socket.getInputStream();
             int len = 0;
             byte[] buf = new byte[1024];
@@ -87,6 +93,8 @@ public class PrinterListener extends Thread {
                 while ((len = in.read(buf)) != -1) {
                     String message = new String(buf, 0, len, StandardCharsets.UTF_8);
                     System.out.println(DateUtil.formatInfo("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message));
+                    logger.info("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
+                    mDataView.append("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
                     this.notify();
                 }
 

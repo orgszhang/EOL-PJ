@@ -1,6 +1,7 @@
 package com.ht.jna;
 
 import com.ht.base.SpringContext;
+import com.ht.entity.EolStatus;
 import com.ht.entity.LatestQRCodes;
 import com.ht.entity.ProRecords;
 import com.ht.entity.TestResults;
@@ -66,7 +67,7 @@ public class KeySightManager {
         keySightDeviceNtc.close();
     }
 
-    public TestResults driveDevices(String visualPartNumber, double cirTemp, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
+    public TestResults driveDevices(String visualPartNumber, double cirTemp, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
         double Electricity; //电流
         double Voltage; //电压
         double voltagev16;  //电压
@@ -85,8 +86,8 @@ public class KeySightManager {
         keySightDeviceElectricity.writeCmd("READ?", mDataView, eolStatus, dos);
         keySightDeviceNtc.writeCmd("READ?", mDataView, eolStatus, dos);
 
-        Voltage = Double.valueOf(keySightDeviceVoltage.readResult())*1000;
-        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult())*1000;
+        Voltage = Double.valueOf(keySightDeviceVoltage.readResult()) * 1000;
+        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult()) * 1000;
         Electricity = Double.valueOf(keySightDeviceElectricity.readResult());
         NTC = Double.valueOf(keySightDeviceNtc.readResult());
 
@@ -141,7 +142,7 @@ public class KeySightManager {
         return result;
     }
 
-    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID, String qrcode, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
+    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID, String qrcode, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
         ProRecords thePart = new ProRecords();
         thePart.setVisualPartNumber(visualPartNumber);
 
@@ -189,6 +190,7 @@ public class KeySightManager {
         try {
             repo.save(thePart);
         } catch (Exception e) {
+            logger.info(e.getMessage());
             mDataView.append("数据库异常，请检查连接！");
         }
 

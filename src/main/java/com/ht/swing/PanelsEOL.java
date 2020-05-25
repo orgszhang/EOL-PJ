@@ -41,7 +41,7 @@ import java.util.List;
 public class PanelsEOL extends JPanel implements ActionListener {
     private static final Log logger = LogFactory.getLog(PanelsEOL.class);
     public static JPanel mainPanel = new JPanel();
-    ThreadLocal<String> eolStatus = ThreadLocal.withInitial(() -> "Reday");
+
 
     // Buttons
     JButton resetButton = new HTSSButton(UIConstant.RESET_BUTTON);
@@ -564,7 +564,6 @@ public class PanelsEOL extends JPanel implements ActionListener {
         devicesPanel.add(new JLabel());
         devicesPanel.add(new JLabel());
         devicesPanel.add(new JLabel());
-
         devicesPanel.add(new JLabel());
 
         deviceManageButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
@@ -637,7 +636,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            printerListener = new PrinterListener(printSeverSocket);
+            printerListener = new PrinterListener(printSeverSocket,     mDataView );
             printerListener.setStatus(mDataView);
             printerListener.start();
             mDataView.append(DateUtil.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
@@ -682,18 +681,20 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("labelResultTwo", labelResultTwo);
             jsonObject.put("labelQRCode", labelQRCode);
             jsonObject.put("mDataView", mDataView);
-            jsonObject.put("eolStatus", eolStatus);
 
             mainPLCListener = new NetPortListener(ipMainPLC,Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket,manager);
             mainPLCListener.start();
             mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
+
+            // 按钮设为"开始测试"
+            plcButton.setText(UIConstant.PLC_CLOSE);
         } else if (actionCommand.equals(UIConstant.PLC_CLOSE)) {
             // 关闭主控PLC通信端口
             mainPLCListener.closePort();
             mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
 
             // 按钮设为"开始测试"
-            deviceManageButton.setText(UIConstant.PLC_OPEN);
+            plcButton.setText(UIConstant.PLC_OPEN);
         } else if (actionCommand.equals(UIConstant.MANUAL_TEST)) {
             if (UIConstant.DEVICES_OPEN.equals(deviceManageButton.getText())) {
                 JOptionPane.showMessageDialog(this, "端口未开！", "错误", JOptionPane.ERROR_MESSAGE);

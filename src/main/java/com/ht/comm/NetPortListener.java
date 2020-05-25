@@ -3,8 +3,10 @@ package com.ht.comm;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ht.base.SpringContext;
+import com.ht.entity.EolStatus;
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
+import com.ht.jna.TcpClient;
 import com.ht.printer.PrinterListener;
 import com.ht.repository.ProRecordsRepo;
 import com.ht.utils.DateUtil;
@@ -22,6 +24,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.NumberFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 //123
@@ -40,23 +44,25 @@ public class NetPortListener extends Thread {
     JLabel labelResultTwo = null; //ntc结果
     JLabel labelQRCode = null;
     JTextArea mDataView = null;
-    ThreadLocal<String> eolStatus;
+    EolStatus eolStatus;
     ServerSocket printSeverSocket;
     Socket printSocket;
     KeySightManager keySightManager;
+    JSONObject allDataJsonObject;
 
-
-    public NetPortListener(String ipMainPLC,int port, JSONObject jsonObject, ServerSocket printSeverSocket, KeySightManager keySightManager) {
+    public NetPortListener(String ipMainPLC, int port, JSONObject jsonObject, ServerSocket printSeverSocket, KeySightManager keySightManager) {
         try {
+      /*      ipMainPLC="127.0.0.1";*/
+            this.allDataJsonObject=jsonObject;
 
             String[] ipStr = ipMainPLC.split("\\.");
             byte[] ipBuf = new byte[4];
-            for(int i = 0; i < 4; i++){
-                ipBuf[i] = (byte)(Integer.parseInt(ipStr[i])&0xff);
+            for (int i = 0; i < 4; i++) {
+                ipBuf[i] = (byte) (Integer.parseInt(ipStr[i]) & 0xff);
             }
 
-            InetAddress inetAddresd=InetAddress.getByAddress(ipBuf);
-            server = new ServerSocket(port,5,inetAddresd);
+            InetAddress inetAddresd = InetAddress.getByAddress(ipBuf);
+            server = new ServerSocket(port, 5, inetAddresd);
             this.codeField = (JTextField) jsonObject.get("visualPartNumber");
             this.qcField = (JTextField) jsonObject.get("textFieldResistorsID");
             this.temp = (JTextField) jsonObject.get("textFieldTemp");
@@ -71,7 +77,7 @@ public class NetPortListener extends Thread {
             this.labelResultTwo = (JLabel) jsonObject.get("labelResultTwo");
             this.labelQRCode = (JLabel) jsonObject.get("labelQRCode");
             this.mDataView = (JTextArea) jsonObject.get("mDataView");
-            this.eolStatus = (ThreadLocal<String>) jsonObject.get("eolStatus");
+            this.eolStatus = new EolStatus();
             this.printSeverSocket = printSeverSocket;
             this.keySightManager = keySightManager;
         } catch (IOException e) {
@@ -103,7 +109,7 @@ public class NetPortListener extends Thread {
             int len = 0;
             byte[] buf = new byte[1024];
             synchronized (this) {
-                while ((len = in.read(buf)) != -1) {
+                while ((len = in.read(buf)) != -1 ) {
                     String message = new String(buf, 0, len, "UTF-8");
                     System.out.println(DateUtil.getDate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
                             + message);
@@ -113,54 +119,20 @@ public class NetPortListener extends Thread {
                         JSONObject result = new JSONObject();
                         result.put("Command", "QueryStatus");
                         JSONObject resultValue = new JSONObject();
-                        resultValue.put("EolStatus", eolStatus.get());
+                        resultValue.put("EolStatus", eolStatus.getEolStatus());
                         result.put("ResultValue", resultValue);
                         dos.write(result.toJSONString().getBytes());
                     } else if (jsonObject.getString("Command").equals("StartTest")) {
-                        eolStatus.set("Busy");
+                        eolStatus.setEolStatus("Busy");
+                        JSONObject result = new JSONObject();
+                        result.put("Command", "StartTest");
+                        dos.write(result.toJSONString().getBytes());
                         JSONObject params = JSONObject.parseObject(jsonObject.get("Parameter").toString());
                         codeField.setText(params.getString("VirtualPartNumber"));
                         qcField.setText(params.getString("ResistorID"));
-                        ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("VirtualPartNumber"), Double.valueOf(temp.getText()), qcField.getText(), null, mDataView, eolStatus, dos);
-                        textFieldRt_R25.setText(proRecords.getR25().toString());
-                        textFieldRw_R16.setText(proRecords.getR16().toString());
-                        textFieldRntc_NTCRValue.setText(proRecords.getRntc().toString());
-                        textFieldTemperature.setText(proRecords.getTntc().toString());
-                        if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
-                            labelResultOne.setText("合格");
-                            labelResultOne.setForeground(Color.green);
+                        Thread thread = new DataTest(keySightManager,params,allDataJsonObject,dos,eolStatus);
+                        thread.start();
 
-                        } else {
-                            labelResultOne.setText("不合格");
-                            labelResultOne.setForeground(Color.red);
-                        }
-
-                        if (Math.abs(proRecords.getTntc() - Double.valueOf(temp.getText())) <= 3) {
-                            labelResultTwo.setText("合格");
-                            labelResultTwo.setForeground(Color.green);
-                        } else {
-                            labelResultTwo.setText("不合格");
-                            labelResultTwo.setForeground(Color.red);
-                        }
-                        labelQRCode.setText(proRecords.getProCode());
-
-
-                        //这里发送给printerSocket客户端----------------------------------------------
-                        if (null != proRecords && null != proRecords.getProCode()) {
-                            Socket socketPrint = new PrinterListener().getSocket();
-                            if (StringUtils.isNotEmpty(proRecords.getProCode())) {
-                                DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
-                                String json = proRecords.getProCode();
-                                dosPrint.write(json.getBytes());
-                            }
-                        }
-                        JSONObject result = new JSONObject();
-                        result.put("Command", "StartTest");
-                        String jsonStr = JSONObject.toJSONString(proRecords);
-                        JSONObject js = JSONObject.parseObject(jsonStr);
-                        js.put("EolStatus", eolStatus.get());
-                        result.put("ResultValue", js);
-                        dos.write(result.toJSONString().getBytes());
                     } else if (jsonObject.getString("Command").equals("QueryResult")) {
                         JSONObject params = JSONObject.parseObject(jsonObject.get("Parameter").toString());
                         ProRecords proRecords = new ProRecords();
@@ -170,15 +142,16 @@ public class NetPortListener extends Thread {
                             Example<ProRecords> resultOne = Example.of(proRecords);
                             proRecords = rRepo.findOne(resultOne).get();
                         } catch (Exception e) {
+                            e.printStackTrace();
                             mDataView.append("数据库异常，请检查连接！");
+                            logger.info(e.getMessage());
                             proRecords = null;
                         }
                         JSONObject result = new JSONObject();
-                        result.put("Command", "SetStatus");
+                        result.put("Command", "QueryResult");
                         JSONObject js = new JSONObject();
-                        js.put("EolStatus", eolStatus.get());
+                        js.put("EolStatus", eolStatus.getEolStatus());
                         if (null == proRecords || StringUtils.isEmpty(proRecords.getProCode())) {
-
                             js.put("testResult", "fail");
                             result.put("ResultValue", js);
                             dos.write(result.toJSONString().getBytes());
@@ -188,15 +161,14 @@ public class NetPortListener extends Thread {
                             json.put("testResult", "success");
                             js.putAll(json);
                             result.put("ResultValue", js);
-                            dos.write(json.toJSONString().getBytes());
+                            dos.write(result.toJSONString().getBytes());
                         }
-
                     } else if (jsonObject.getString("Command").equals("SetStatus")) {
-                        eolStatus.set("Ready");
+                        eolStatus.setEolStatus("Ready");
                         JSONObject result = new JSONObject();
                         result.put("Command", "SetStatus");
                         JSONObject js = new JSONObject();
-                        js.put("EolStatus", eolStatus.get());
+                        js.put("EolStatus", eolStatus.getEolStatus());
                         result.put("ResultValue", js);
                         dos.write(result.toJSONString().getBytes());
                     }

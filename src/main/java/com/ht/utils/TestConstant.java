@@ -4,7 +4,7 @@ public class TestConstant {
     public static float DEFALUT_ERROR_RESISTOR = -2000;
     public static float DEFAULT_ERROR_TEMPERATURE = -2000;
 
-    public static int TEST_TIMES = 10;
+    public static int TEST_TIMES = 5;
 
     public static double RESISTOR_EXP = 75;
     public static double RESISTOR_TOLERANCE = 0.05;

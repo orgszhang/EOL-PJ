@@ -1,5 +1,6 @@
 package com.ht.jna;
 
+import com.ht.entity.EolStatus;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
@@ -111,7 +112,7 @@ public class KeySightDevice_Electricity {
         return true;
     }
 
-    public Boolean writeCmd(String cmdStr, JTextArea mDataView, ThreadLocal<String> eolStatus, DataOutputStream dos) {
+    public Boolean writeCmd(String cmdStr, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
 //        VI_ATTR_SUPPRESS_END_EN();
 //        VI_ATTR_TERMCHAR_EN();
         NativeLong a = new NativeLong(vipSession.getValue());
