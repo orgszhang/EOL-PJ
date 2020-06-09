@@ -35,7 +35,9 @@ public final class UIConstant {
     public static final Color BGCOLOR_GRAY = new Color(160, 160, 160);
     public static final Color DARK_GREEN = new Color(66, 153, 66);
 
-    public static final int SCREEN_WIDTH = 1000;
+    public static int SCREEN_WIDTH = Toolkit.getDefaultToolkit().getScreenSize().width;
+    public static int MAIN_WIDTH = Math.round(SCREEN_WIDTH * 0.50f);
+    public static int SIDE_WIDTH = Math.round(SCREEN_WIDTH * 0.20f);
 
     public static String formatDeltaR(double input) {
         return DELTA_R + EQUAL + String.format("%.4f", input / 100) + PERCENT;

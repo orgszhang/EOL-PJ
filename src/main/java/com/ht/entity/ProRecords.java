@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -109,6 +110,7 @@ public class ProRecords {
 
     @Override
     public String toString() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return "ProRecords{" +
                 "visualPartNumber='" + visualPartNumber +
                 "', ResistorID='" + resistorID +
@@ -117,7 +119,7 @@ public class ProRecords {
                 ", Rntc=" + Rntc +
                 ", Tntc=" + Tntc +
                 ", QRCode='" + qrCode + '\'' +
-                ", ProDate='" + proDate + '\'' +
+                ", ProDate='" + sdf.format(proDate) + '\'' +
                 ", Comments='" + comments + '\'' +
                 "'}";
     }

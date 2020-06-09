@@ -1,4 +1,4 @@
-package com.ht.jna;
+package com.ht.dc;
 
 import com.ht.base.SpringContext;
 import com.ht.entity.Devices;
@@ -9,25 +9,17 @@ import org.apache.commons.logging.LogFactory;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 public class TcpClient {
     private static final Log logger = LogFactory.getLog(TcpClient.class);
 
     Socket socket;
-    String ip;
-    int port;
+    String ip = "169.254.210.22";
+    int port = 5025;
 
     public TcpClient() {
-        ip = "169.254.210.22";
-        port = 5025;
-        try {
-            DevicesRepo repo = SpringContext.getBean(DevicesRepo.class);
-            Optional<Devices> dc = repo.findById("DC");
-            ip = dc.get().getIpAddress();
-        } catch (Exception e) {
-            logger.error(e);
-        }
     }
 
     public static void main(String[] args) {
@@ -60,10 +52,12 @@ public class TcpClient {
                 socket = new Socket(ip, port);
                 writeCmd("SYSTem:LOCK ON");
                 socket.close();
+                logger.info("电源远程控制模式打开");
             } else {
                 socket = new Socket(ip, port);
                 writeCmd("SYSTem:LOCK OFF");
                 socket.close();
+                logger.info("电源远程控制模式关闭");
             }
         } catch (Exception exp) {
             logger.error(exp);
@@ -75,6 +69,7 @@ public class TcpClient {
             socket = new Socket(ip, port);
             writeCmd("OUTPut ON");
             socket.close();
+            logger.info("电源通电");
         } catch (Exception exp) {
             logger.error(exp);
         }
@@ -85,28 +80,18 @@ public class TcpClient {
             socket = new Socket(ip, port);
             writeCmd("OUTPut OFF");
             socket.close();
+            logger.info("电源断电");
         } catch (Exception exp) {
             logger.error(exp);
         }
     }
 
     public void writeCmd(String cmd) {
-        System.out.println(cmd);
+        // System.out.println(cmd);
         try {
             OutputStream out = socket.getOutputStream();
             out.write((cmd + "\n").getBytes(StandardCharsets.UTF_8));
             out.flush();
-            //读取服务器发回的数据，使用socket套接字对象中的字节输入流
-            /*InputStream in = socket.getInputStream();
-            byte[] data = new byte[1024];
-            int len = in.read(data);
-            if (len < 1) {
-                // System.out.println("No input");
-            } else {
-                System.out.println(new String(data, 0, len));
-            }*/
-
-            // Thread.sleep(1000);
         } catch (Exception exp) {
             logger.error(exp);
         }

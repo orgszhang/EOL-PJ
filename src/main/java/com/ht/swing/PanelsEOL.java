@@ -3,17 +3,20 @@ package com.ht.swing;
 import com.alibaba.fastjson.JSONObject;
 import com.ht.base.SpringContext;
 import com.ht.comm.NetPortListener;
+import com.ht.dc.TcpClient;
 import com.ht.entity.Devices;
+import com.ht.entity.EolStatus;
 import com.ht.entity.ProRecords;
 import com.ht.jna.KeySightManager;
-import com.ht.jna.TcpClient;
+import com.ht.jna.TestThread;
 import com.ht.printer.PrinterListener;
 import com.ht.repository.DevicesRepo;
 import com.ht.utils.DateUtil;
 import com.ht.utils.TestConstant;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.poi.util.StringUtil;
+import org.springframework.util.StringUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -23,9 +26,6 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
@@ -42,7 +42,6 @@ public class PanelsEOL extends JPanel implements ActionListener {
     private static final Log logger = LogFactory.getLog(PanelsEOL.class);
     public static JPanel mainPanel = new JPanel();
 
-
     // Buttons
     JButton resetButton = new HTSSButton(UIConstant.RESET_BUTTON);
     JButton deviceManageButton = new HTSSButton(UIConstant.DEVICES_OPEN);
@@ -50,11 +49,11 @@ public class PanelsEOL extends JPanel implements ActionListener {
     JButton plcButton = new HTSSButton(UIConstant.PLC_OPEN);
 
     // Input Fields
-    JTextField textFieldeolStatus = new HTSSInputField();  //
+    // JTextField textFieldeolStatus = new HTSSInputField();  //
     JTextField visualPartNumber = new HTSSInputField();  //
     JTextField textFieldTemp = new HTSSInputField();  //
-    JTextField textFieldMainPLCPort = new HTSSInputField();  //
-    JTextField textFieldLaserPort = new HTSSInputField();
+    // JTextField textFieldMainPLCPort = new HTSSInputField();  //
+    // JTextField textFieldLaserPort = new HTSSInputField();
     JTextField textFieldResistorsID = new HTSSInputField();
     JTextField textFieldRt_R25 = new HTSSResultField();  // Rt
     JTextField textFieldRw_R16 = new HTSSResultField();  // Rw
@@ -78,16 +77,14 @@ public class PanelsEOL extends JPanel implements ActionListener {
     // 网口
     NetPortListener mainPLCListener;
     PrinterListener printerListener;
-    ServerSocket printSeverSocket = null;
-    String ipMainPLC;
-    // Socket printSocket = null;
-    private JTextArea mDataView = new JTextArea();
+    // ServerSocket printSeverSocket = null;
+    // String ipMainPLC;
 
+    private JTextArea mDataView = new JTextArea();
     private volatile boolean ready = true;
 
     public PanelsEOL() {
         initMainPanel();
-        /*    this.initData();*/
         this.add(mainPanel);
         mainPanel.setVisible(true);
 
@@ -143,10 +140,10 @@ public class PanelsEOL extends JPanel implements ActionListener {
         JPanel jstatusPanel = new JPanel();
         jstatusPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
         mDataView.setFocusable(false);
-        mDataView.setFont(UIConstant.TEXT_FONT);
+        mDataView.setFont(UIConstant.COPYRIGHT_FONT);
         mDataView.setLineWrap(true);
         JScrollPane jsp2 = new JScrollPane(mDataView, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        jsp2.setPreferredSize(new Dimension(420, 690));
+        jsp2.setPreferredSize(new Dimension(UIConstant.SIDE_WIDTH, 690));
         jstatusPanel.add(jsp2);
         mainPanel.add(jstatusPanel);
 
@@ -161,7 +158,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         JPanel lbPanel = new JPanel();
         JLabel proLabel = new JLabel("上海禾他汽车科技有限公司 版权所有 ©2019-2099");
         proLabel.setFont(UIConstant.COPYRIGHT_FONT);
-        proLabel.setPreferredSize(new Dimension(UIConstant.SCREEN_WIDTH, 25));
+        proLabel.setPreferredSize(new Dimension(UIConstant.MAIN_WIDTH, 25));
         proLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         lbPanel.add(proLabel);
         mainPanel.add(lbPanel);
@@ -198,7 +195,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         titlePanel.add(iconLabel);
 
         JLabel titleLabel = new JLabel(UIConstant.APP_NAME);
-        titleLabel.setPreferredSize(new Dimension(UIConstant.SCREEN_WIDTH - 100, 80));
+        titleLabel.setPreferredSize(new Dimension(UIConstant.MAIN_WIDTH - 100, 80));
         titleLabel.setFont(UIConstant.TITLE_FONT);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titlePanel.add(titleLabel);
@@ -241,7 +238,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         JPanel partDataPanel = new JPanel();
         partDataPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
                 "检测参数", TitledBorder.LEFT, TitledBorder.CENTER, UIConstant.TEXT_FONT));
-        partDataPanel.setPreferredSize(new Dimension(UIConstant.SCREEN_WIDTH, 220));
+        partDataPanel.setPreferredSize(new Dimension(UIConstant.MAIN_WIDTH, 220));
         GridLayout partDataLayout = new GridLayout(4, 2, 5, 5);
         partDataPanel.setLayout(partDataLayout);
 
@@ -307,14 +304,12 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         radioBtn01.addChangeListener(changeListener);
         radioBtn02.addChangeListener(changeListener);
-        // radioBtn03.addChangeListener(changeListener);
 
         // 设置第一个单选按钮选中
         radioBtn02.setSelected(true);
 
         jrbPanel.add(radioBtn02);
         jrbPanel.add(radioBtn01);
-        // jrbPanel.add(radioBtn03);
         partDataPanel.add(jrbPanel);
 
         radioBtn04.setFont(UIConstant.COPYRIGHT_FONT);
@@ -336,7 +331,6 @@ public class PanelsEOL extends JPanel implements ActionListener {
         /*----- 虚拟零件号 ----*/
         JPanel panel1 = new JPanel();
         panel1.setLayout(new FlowLayout());
-        // panel1.add(Box.createRigidArea(new Dimension(15, 15)));
         JLabel label1 = new HTSSLabel("虚拟零件号：");
         label1.setHorizontalAlignment(SwingConstants.RIGHT);
         label1.setPreferredSize(new Dimension(120, 30));
@@ -349,8 +343,6 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         jcbPanel.add(checkBox01);
         partDataPanel.add(jcbPanel);
-
-
 
         /*----- 分流器二维码 ----*/
         JPanel panel2 = new JPanel();
@@ -383,7 +375,7 @@ public class PanelsEOL extends JPanel implements ActionListener {
         testResultPanel.setBackground(UIConstant.BGCOLOR_BLUE);
         testResultPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
                 "检测结果", TitledBorder.LEFT, TitledBorder.CENTER, UIConstant.AREA_FONT));
-        testResultPanel.setPreferredSize(new Dimension(UIConstant.SCREEN_WIDTH, 280));
+        testResultPanel.setPreferredSize(new Dimension(UIConstant.MAIN_WIDTH, 280));
 
         //row 1
         testResultPanel.add(new JLabel());
@@ -482,95 +474,58 @@ public class PanelsEOL extends JPanel implements ActionListener {
     private JPanel createDevicesPanel() {
         JPanel devicesPanel = new JPanel();
         devicesPanel.setBorder(new EmptyBorder(15, 0, 0, 0));
-        GridLayout gridLayoutL = new GridLayout(14, 3, 5, 5);
+        GridLayout gridLayoutL = new GridLayout(10, 3, 5, 5);
         devicesPanel.setLayout(gridLayoutL);
-        devicesPanel.setPreferredSize(new Dimension(420, 520));
-
-        /*devicesPanel.add(new JLabel());
-        devicesPanel.add(new JLabel());
-        devicesPanel.add(new JLabel());*/
-
-        List<Devices> deviceList = null;
-        try {
-            DevicesRepo repo = SpringContext.getBean(DevicesRepo.class);
-            deviceList = repo.findAll();
-        } catch (Exception e) {
-            logger.error(e);
-        }
+        devicesPanel.setPreferredSize(new Dimension(UIConstant.SIDE_WIDTH, 520));
 
         JLabel l1 = new HTSSLabel("设备");
         JPanel p1 = new JPanel(new BorderLayout());
         l1.setFont(UIConstant.TEXT_FONT);
-        p1.setBackground(UIConstant.BGCOLOR_GRAY);
+        l1.setForeground(UIConstant.BGCOLOR_BLUE);
         p1.add(l1);
         devicesPanel.add(p1);
         JLabel l2 = new HTSSLabel("地址");
         JPanel p2 = new JPanel(new BorderLayout());
         l2.setFont(UIConstant.TEXT_FONT);
-        p2.setBackground(UIConstant.BGCOLOR_GRAY);
+        l2.setForeground(UIConstant.BGCOLOR_BLUE);
         p2.add(l2);
         devicesPanel.add(p2);
         JLabel l3 = new HTSSLabel("端口");
         JPanel p3 = new JPanel(new BorderLayout());
         l3.setFont(UIConstant.TEXT_FONT);
-        p3.setBackground(UIConstant.BGCOLOR_GRAY);
+        l3.setForeground(UIConstant.BGCOLOR_BLUE);
         p3.add(l3);
         devicesPanel.add(p3);
 
-        devicesPanel.add(new HTSSLabel("本机"));
-        String localhost = "localhost";
-        try {
-            InetAddress inetAddress = InetAddress.getLocalHost();
-            String ip = inetAddress.toString();
-            localhost = StringUtils.substringAfterLast(ip, "/");
-            devicesPanel.add(new HTSSLabel(localhost));
-        } catch (Exception e) {
-            devicesPanel.add(new HTSSLabel(localhost));
-        }
-        devicesPanel.add(new JLabel());
-        // devicesPanel.add(new HTSSStatusLabel());
+        devicesPanel.add(new HTSSLabel("主控"));
+        devicesPanel.add(new HTSSLabel("192.168.10.80"));
+        devicesPanel.add(new HTSSLabel("8088"));
 
-        String finalLocalhost = localhost;
-        deviceList.forEach(item -> {
-            devicesPanel.add(new HTSSLabel(item.getDevice()));
+        devicesPanel.add(new HTSSLabel("-"));
+        devicesPanel.add(new HTSSLabel("-"));
+        devicesPanel.add(new HTSSLabel("-"));
 
-            if ("localhost".equals(item.getIpAddress())) {
-                devicesPanel.add(new HTSSLabel(finalLocalhost));
-            } else {
-                devicesPanel.add(new HTSSLabel(item.getIpAddress()));
-            }
+        devicesPanel.add(new HTSSLabel("电源"));
+        devicesPanel.add(new HTSSLabel("169.254.210.22"));
+        devicesPanel.add(new HTSSLabel("5025"));
 
-            if ("MainPLC".equals(item.getDevice())) {
-                ipMainPLC = item.getIpAddress();
+        devicesPanel.add(new HTSSLabel("测试设备"));
+        devicesPanel.add(new HTSSLabel("169.254.210.X"));
+        devicesPanel.add(new HTSSLabel("-"));
 
-                JPanel jp1 = new JPanel(new GridBagLayout());
-                textFieldMainPLCPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
-                textFieldMainPLCPort.setHorizontalAlignment(0);
-                textFieldMainPLCPort.setText(item.getPortNumber());
-                jp1.add(textFieldMainPLCPort);
-                devicesPanel.add(jp1);
-            } else if ("LaserMarking".equals(item.getDevice())) {
-                JPanel jp2 = new JPanel(new GridBagLayout());
-                textFieldLaserPort.setPreferredSize(UIConstant.INPUT_DIMENSION);
-                textFieldLaserPort.setHorizontalAlignment(0);
-                textFieldLaserPort.setText(item.getPortNumber());
-                jp2.add(textFieldLaserPort);
-                devicesPanel.add(jp2);
-            } else {
-                devicesPanel.add(new HTSSLabel(item.getPortNumber()));
-            }
-        });
+        devicesPanel.add(new HTSSLabel("打码机"));
+        devicesPanel.add(new HTSSLabel("169.254.210.66"));
+        devicesPanel.add(new HTSSLabel("8082"));
 
         devicesPanel.add(new JLabel());
         devicesPanel.add(new JLabel());
         devicesPanel.add(new JLabel());
-        devicesPanel.add(new JLabel());
 
+        devicesPanel.add(new JLabel());
         deviceManageButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
         JPanel b1Panel = new JPanel();
         b1Panel.add(deviceManageButton);
         devicesPanel.add(b1Panel);
-
         devicesPanel.add(new JLabel());
 
         devicesPanel.add(new JLabel());
@@ -581,17 +536,14 @@ public class PanelsEOL extends JPanel implements ActionListener {
         devicesPanel.add(new JLabel());
 
         devicesPanel.add(new JLabel());
-
         resetButton.setPreferredSize(UIConstant.BUTTON_DIMENSION);
         JPanel b1Panelr = new JPanel();
         b1Panelr.add(resetButton);
         devicesPanel.add(b1Panelr);
-
         devicesPanel.add(new JLabel());
 
         return devicesPanel;
     }
-
 
 
     /**
@@ -612,62 +564,39 @@ public class PanelsEOL extends JPanel implements ActionListener {
         } else if (actionCommand.equals(UIConstant.DEVICES_OPEN)) {
             frameReset();
 
-            String laserPort = textFieldLaserPort.getText();
-            try {
-                Integer i = Integer.parseInt(laserPort);
-            } catch (Exception exp) {
-                mDataView.append(DateUtil.formatInfo("激光打码机通信端口" + laserPort + "输入有误，请重新输入！"));
-                return;
-            }
-
-            logger.info("连接测试设备......");
             // 初始化电源和测试设备
+            logger.info("连接测试设备......");
             manager.initDevices(mDataView);
-            mDataView.append(DateUtil.formatInfo("已连接测试设备......"));
+            mDataView.append(DateUtil.formatInfo("测试设备已连接......"));
 
             // 连接电源
             TcpClient client = new TcpClient();
             client.remoteCtl(true);
-            mDataView.append(DateUtil.formatInfo("电源已接通......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("电源已接通......"));
 
             // 打开激光打码机通信端口
-            try {
-                printSeverSocket = new ServerSocket(Integer.parseInt(textFieldLaserPort.getText()));
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            printerListener = new PrinterListener(printSeverSocket,     mDataView );
-            printerListener.setStatus(mDataView);
-            printerListener.start();
-            mDataView.append(DateUtil.formatInfo("激光打码机通信端口已打开，可以接收数据......" + getStatus()));
+            printerListener = PrinterListener.getInstance(mDataView);
+            mDataView.append(DateUtil.formatInfo("打码机通信端口已打开......"));
 
             // 按钮设为"结束测试"
             deviceManageButton.setText(UIConstant.DEVICES_CLOSE);
         } else if (actionCommand.equals(UIConstant.DEVICES_CLOSE)) {
             // 关闭激光打码机通信端口
             printerListener.closePort();
-            mDataView.append(DateUtil.formatInfo("激光打码机通信端口已关闭......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("打码机通信端口已关闭......"));
 
             // 关闭电源
             TcpClient client = new TcpClient();
             client.remoteCtl(false);
-            mDataView.append(DateUtil.formatInfo("电源已断开......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("电源已断开......"));
 
             // 关闭测试设备
             manager.closeDivices();
-            mDataView.append(DateUtil.formatInfo("测试设备已断开......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("测试设备已断开......"));
 
             // 按钮设为"开始测试"
             deviceManageButton.setText(UIConstant.DEVICES_OPEN);
         } else if (actionCommand.equals(UIConstant.PLC_OPEN)) {
-            String mainPort = textFieldMainPLCPort.getText();
-            try {
-                Integer i = Integer.parseInt(mainPort);
-            } catch (Exception exp) {
-                mDataView.append(DateUtil.formatInfo("主控通信端口" + mainPort + "输入有误，请重新输入！"));
-                return;
-            }
-
             // 打开主控PLC通信端口
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("textFieldTemp", textFieldTemp);
@@ -682,16 +611,20 @@ public class PanelsEOL extends JPanel implements ActionListener {
             jsonObject.put("labelQRCode", labelQRCode);
             jsonObject.put("mDataView", mDataView);
 
-            mainPLCListener = new NetPortListener(ipMainPLC,Integer.parseInt(textFieldMainPLCPort.getText()), jsonObject, printSeverSocket,manager);
-            mainPLCListener.start();
-            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开，可以接收数据......" + getStatus()));
+            mainPLCListener = new NetPortListener(manager, jsonObject);
+            // mainPLCListener.start();
+            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已打开....."));
 
             // 按钮设为"开始测试"
             plcButton.setText(UIConstant.PLC_CLOSE);
         } else if (actionCommand.equals(UIConstant.PLC_CLOSE)) {
             // 关闭主控PLC通信端口
-            mainPLCListener.closePort();
-            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......" + getStatus()));
+            mDataView.append(DateUtil.formatInfo("主控PLC通信端口已关闭......"));
+            try {
+                mainPLCListener.close();
+            } catch (Exception exp) {
+                logger.error("主控PLC通信端口关闭错误：" + exp);
+            }
 
             // 按钮设为"开始测试"
             plcButton.setText(UIConstant.PLC_OPEN);
@@ -702,8 +635,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
             }
 
             String resistorID = textFieldResistorsID.getText();
-            if ("".equals(resistorID)) {
-                mDataView.append(DateUtil.formatInfo("分流器二维码输入有误，请重新输入！"));
+            if (StringUtils.isEmpty(resistorID)) {
+                JOptionPane.showMessageDialog(this, "分流器二维码输入有误，请重新输入！", "错误", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -711,65 +644,45 @@ public class PanelsEOL extends JPanel implements ActionListener {
             try {
                 double d = Double.parseDouble(cirTemp);
                 if (d < 15) {
-                    mDataView.append(DateUtil.formatInfo("环境温度" + cirTemp + "<15°C，过低！"));
+                    JOptionPane.showMessageDialog(this, "环境温度" + cirTemp + "<15°C，过低！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
                 } else if (d > 35) {
-                    mDataView.append(DateUtil.formatInfo("环境温度" + cirTemp + ">35°C，过高！"));
+                    JOptionPane.showMessageDialog(this, "环境温度" + cirTemp + ">35°C，过高！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             } catch (Exception exp) {
-                mDataView.append(DateUtil.formatInfo("环境温度值输入错误！"));
+                JOptionPane.showMessageDialog(this, "环境温度值输入错误！", "错误", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            visualPartNumber.setText(DateUtil.createVitualPartNumber());
-
-            logger.info("测试开始...");
-
-            // 开电源
-            TcpClient client = new TcpClient();
-            mDataView.append(new Date() + " - 测试开始 ...\r\n");
-            client.open();
-
-            String qrcode = "NA";
-            if (radioBtn04.isSelected()) qrcode = TestConstant.SVW;
-            else if (radioBtn05.isSelected()) qrcode = TestConstant.FAW;
-
-            ProRecords result = manager.testThePart(visualPartNumber.getText(), Double.parseDouble(cirTemp), resistorID, qrcode, mDataView, null, null);
-
-            // 关电源
-            client.close();
-            mDataView.append(new Date() + " - 测试结束 ...\r\n");
-
-            NumberFormat ddf = NumberFormat.getNumberInstance();
-            ddf.setMaximumFractionDigits(4);
-            textFieldRt_R25.setText(ddf.format(result.getR25()));
-            textFieldRw_R16.setText(ddf.format(result.getR16()));
-            textFieldRntc_NTCRValue.setText(ddf.format(result.getRntc()));
-            textFieldTemperature.setText(ddf.format(result.getTntc()));
-
-            if ((result.getR25() < 78.25 && result.getR25() > 71.75)
-                    && (result.getR16() < 78.25 && result.getR16() > 71.75)) {
-                labelResultOne.setText("合格");
-                labelResultOne.setForeground(Color.green);
-            } else {
-                labelResultOne.setText("不合格");
-                labelResultOne.setForeground(Color.red);
+            int flag = 0;
+            if (radioBtn04.isSelected()) {
+                flag = 1;
+            } else if (radioBtn05.isSelected()) {
+                flag = 2;
             }
+            visualPartNumber.setText(DateUtil.createVitualPartNumber(flag));
 
-            if (Math.abs(result.getTntc() - Double.parseDouble(cirTemp)) <= 3) {
-                labelResultTwo.setText("合格");
-                labelResultTwo.setForeground(Color.green);
-            } else {
-                labelResultTwo.setText("不合格");
-                labelResultTwo.setForeground(Color.red);
-            }
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("textFieldTemp", textFieldTemp);
+            jsonObject.put("visualPartNumber", visualPartNumber);
+            jsonObject.put("textFieldResistorsID", textFieldResistorsID);
+            jsonObject.put("textFieldRt_R25", textFieldRt_R25);
+            jsonObject.put("textFieldRw_R16", textFieldRw_R16);
+            jsonObject.put("textFieldRntc_NTCRValue", textFieldRntc_NTCRValue);
+            jsonObject.put("textFieldTemperature", textFieldTemperature);
+            jsonObject.put("labelResultOne", labelResultOne);
+            jsonObject.put("labelResultTwo", labelResultTwo);
+            jsonObject.put("labelQRCode", labelQRCode);
+            jsonObject.put("mDataView", mDataView);
 
+            logger.info("测试开始...[" + visualPartNumber.getText() + ", " + textFieldResistorsID.getText() + "]");
+            boolean print = false;
             if (checkBox01.isSelected()) {
-                printerListener.sendMessage(qrcode);
+                print = true;
             }
-
-            logger.info("result testResultVo is: " + result);
+            TestThread thread = new TestThread(manager, jsonObject, /*null,*/ false, print);
+            thread.start();
         } else {
             logger.error("something wrong boy..." + actionCommand);
         }

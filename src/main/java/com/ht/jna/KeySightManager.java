@@ -41,57 +41,57 @@ public class KeySightManager {
 
     public void initDevices(JTextArea mDataView) {
         //每一个六位半对应一个class
+        keySightDeviceElectricity = new KeySightDevice_Electricity();
         keySightDeviceVoltage = new KeySightDevice_Voltage();
         keySightDeviceVoltage16 = new KeySightDevice_Voltage16();
-        keySightDeviceElectricity = new KeySightDevice_Electricity();
         keySightDeviceNtc = new KeySightDevice_NTC();
 
         //分别打开三台设备
+        keySightDeviceElectricity.open(mDataView);
         keySightDeviceVoltage.open(mDataView);
         keySightDeviceVoltage16.open(mDataView);
-        keySightDeviceElectricity.open(mDataView);
         keySightDeviceNtc.open(mDataView);
 
         //分别设置设备的量程
+        keySightDeviceElectricity.setEleCONF();
         keySightDeviceVoltage.setVolCONF();
         keySightDeviceVoltage16.setVolCONF();
-        keySightDeviceElectricity.setEleCONF();
         keySightDeviceNtc.setRCONF();
     }
 
     public void closeDivices() {
         //读取完成后关闭设备
+        keySightDeviceElectricity.close();
         keySightDeviceVoltage.close();
         keySightDeviceVoltage16.close();
-        keySightDeviceElectricity.close();
         keySightDeviceNtc.close();
     }
 
-    public TestResults driveDevices(String visualPartNumber, double cirTemp, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
+    public TestResults driveDevices(String visualPartNumber, double cirTemp, JTextArea mDataView, boolean production) {
         double Electricity; //电流
         double Voltage; //电压
         double voltagev16;  //电压
         double NTC; //NTC电阻
 
-        logger.info("Before reading " + visualPartNumber + "'s data, let's sleep 1 second...");
+        logger.debug("Before reading " + visualPartNumber + "'s data, let's sleep 1 second...");
         try {
-            Thread.sleep(1 * 1000);
+            Thread.sleep(500);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         //分别发送指令通知六位半需要读取数据
-        keySightDeviceVoltage.writeCmd("READ?", mDataView, eolStatus, dos);
-        keySightDeviceVoltage16.writeCmd("READ?", mDataView, eolStatus, dos);
-        keySightDeviceElectricity.writeCmd("READ?", mDataView, eolStatus, dos);
-        keySightDeviceNtc.writeCmd("READ?", mDataView, eolStatus, dos);
+        keySightDeviceElectricity.writeCmd("READ?");
+        keySightDeviceVoltage.writeCmd("READ?");
+        keySightDeviceVoltage16.writeCmd("READ?");
+        keySightDeviceNtc.writeCmd("READ?");
 
-        Voltage = Double.valueOf(keySightDeviceVoltage.readResult()) * 1000;
-        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult()) * 1000;
         Electricity = Double.valueOf(keySightDeviceElectricity.readResult());
+        Voltage = Double.valueOf(keySightDeviceVoltage.readResult());
+        voltagev16 = Double.valueOf(keySightDeviceVoltage16.readResult());
         NTC = Double.valueOf(keySightDeviceNtc.readResult());
 
-        return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp, mDataView);
+        return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp, mDataView, production);
     }
 
     public TestResults pseudoDriveDevices(String visualPartNumber, double cirTemp) {
@@ -103,24 +103,33 @@ public class KeySightManager {
         /*return saveTestResult(visualPartNumber, Electricity, Voltage, voltagev16, NTC, cirTemp);*/
     }
 
-    private TestResults saveTestResult(String visualPartNumber, double Electricity, double Voltage, double voltagev16, double NTC, double cirTemp, JTextArea mDataView) {
+    private TestResults saveTestResult(String visualPartNumber, double Electricity, double Voltage, double voltagev16, double NTC, double cirTemp, JTextArea mDataView, boolean production) {
         TestResults result = new TestResults();
 
         result.setVisualPartNumber(visualPartNumber);
         result.setMainCurr(Electricity);
         result.setV25(Voltage);
-        double r25 = Voltage / Electricity * 1000;
-        result.setR25(r25);  // 25 rt
         result.setV16(voltagev16);
-        result.setR16(voltagev16 / Electricity * 1000);  // 16 rw
+        if (Math.abs(Electricity) > 1) {
+            result.setR25(Voltage / Electricity * 1000000);  // 25 rt
+            result.setR16(voltagev16 / Electricity * 1000000);  // 16 rw
+        } else {
+            result.setR25(2000);  // 25 rt
+            result.setR16(2000);  // 16 rw
+        }
 
-        if ((Math.abs(r25 - TestConstant.RESISTOR_EXP) / TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE) {
+        if (((Math.abs(result.getR25() - TestConstant.RESISTOR_EXP) / TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE)
+                && ((Math.abs(result.getR16() - TestConstant.RESISTOR_EXP) / TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE)) {
             result.setResistorOK(true);
         } else {
             result.setResistorOK(false);
         }
 
-        result.setNtcR(NTC);
+        if (NTC > TempCalculator.AbHigh) {
+            result.setNtcR(-2000);
+        } else {
+            result.setNtcR(NTC);
+        }
         result.setNtcT(TempCalculator.QCalTemp(NTC));
         if (Math.abs(TempCalculator.QCalTemp(NTC) - cirTemp) <= TestConstant.TEMP_GAP) {
             result.setNTC_OK(true);
@@ -130,19 +139,22 @@ public class KeySightManager {
 
         result.setTestTime(Calendar.getInstance().getTime());
 
-        logger.info("ProRecords save: " + result.toString());
+        logger.debug("ProRecords save: " + result.toString());
         try {
             TestResultsRepo rRepo = SpringContext.getBean(TestResultsRepo.class);
             rRepo.save(result);
         } catch (Exception e) {
             mDataView.append("数据库异常，请检查连接！");
             logger.error("Save ProRecordsRepo to DB error. ", e);
+            if (production) {
+                EolStatus.getInstance().setEolStatus("Error");
+            }
         }
 
         return result;
     }
 
-    public ProRecords testThePart(String visualPartNumber, double cirTemp, String resistorID, String qrcode, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
+    public ProRecords testThePart(String visualPartNumber, String resistorID, double cirTemp, JTextArea mDataView, boolean production) {
         ProRecords thePart = new ProRecords();
         thePart.setVisualPartNumber(visualPartNumber);
 
@@ -156,8 +168,7 @@ public class KeySightManager {
         // 循环Test_Time次
         // 按ResistorID和maskID，获得一次Run
         for (int i = 0; i < TestConstant.TEST_TIMES; i++) {
-            // TestResults oneTest = pseudoDriveDevices(visualPartNumber, cirTemp);
-            TestResults oneTest = driveDevices(visualPartNumber, cirTemp, mDataView, eolStatus, dos);
+            TestResults oneTest = driveDevices(visualPartNumber, cirTemp, mDataView, production);
             r25 = r25 + oneTest.getR25();
             r16 = r16 + oneTest.getR16();
             rntc = rntc + oneTest.getNtcR();
@@ -178,41 +189,36 @@ public class KeySightManager {
         thePart.setTntc(TempCalculator.QCalTemp(avgRntc));
 
         if (judgeResistor && judgeNTC) {
-            thePart.setProCode(maintainQRCode(visualPartNumber, qrcode));
+            thePart.setProCode(maintainQRCode(visualPartNumber, production));
         } else {
             thePart.setProCode(null);
         }
         thePart.setProDate(new Date());
 
-        thePart.setComments(resistorID);
-
-        ProRecordsRepo repo = SpringContext.getBean(ProRecordsRepo.class);
         try {
+            ProRecordsRepo repo = SpringContext.getBean(ProRecordsRepo.class);
             repo.save(thePart);
         } catch (Exception e) {
-            logger.info(e.getMessage());
+            logger.error(e.getMessage());
             mDataView.append("数据库异常，请检查连接！");
+            if (production) {
+                EolStatus.getInstance().setEolStatus("Error");
+            }
         }
-
-
         return thePart;
     }
 
-    private String maintainQRCode(String visualPartNumber, String qrcode) {
+    private String maintainQRCode(String visualPartNumber, boolean production) {
         String factoryID = null;
         if (visualPartNumber.startsWith("D")) {
             factoryID = TestConstant.SVW;
         } else if (visualPartNumber.startsWith("G")) {
             factoryID = TestConstant.FAW;
-        } else if (TestConstant.SVW.equals(qrcode)) {
-            factoryID = TestConstant.SVW;
-        } else if (TestConstant.FAW.equals(qrcode)) {
-            factoryID = TestConstant.FAW;
         } else {
             return null;
         }
 
-        logger.info("getLatestQRCodeByFactoryID start : " + factoryID);
+        logger.debug("getLatestQRCodeByFactoryID start : " + factoryID);
         String nextBarCode = null;
         try {
             LatestQRCodeRepo repo = SpringContext.getBean(LatestQRCodeRepo.class);
@@ -227,7 +233,10 @@ public class KeySightManager {
             lqrc.setCustomerPartNo(factoryID);
             repo.save(lqrc);
         } catch (Exception e) {
-            logger.error("Cannot find the latest QR code --> " + factoryID, e);
+            logger.error("数据库无最新的QR Cosw --> " + factoryID, e);
+            if (production) {
+                EolStatus.getInstance().setEolStatus("Error");
+            }
         }
 
         return nextBarCode;

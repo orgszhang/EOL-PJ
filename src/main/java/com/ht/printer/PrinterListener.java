@@ -1,6 +1,6 @@
 package com.ht.printer;
 
-import com.ht.comm.NetPortListener;
+import com.ht.entity.EolStatus;
 import com.ht.utils.DateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -9,61 +9,55 @@ import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-public class PrinterListener extends Thread {
-    private static final Log logger = LogFactory.getLog(NetPortListener.class);
+public class PrinterListener {
+    private static final Log logger = LogFactory.getLog(PrinterListener.class);
+
     private static Socket socket = null;
-    public Boolean isConnect = false;
+    static PrinterListener listener;
+
     ServerSocket server = null;
     JTextArea mDataView = null;
-    JTextArea status;
 
-    public PrinterListener(ServerSocket serverSocket) {
-        this.server = serverSocket;
-    }
+    private PrinterListener(JTextArea mDataView) {
+        this.mDataView = mDataView;
 
-    public PrinterListener() {
+        String ip = "169.254.210.66";
+        int port = 8082;
+
+        String[] ipStr = ip.split("\\.");
+        byte[] ipBuf = new byte[4];
+        for (int i = 0; i < 4; i++) {
+            ipBuf[i] = (byte) (Integer.parseInt(ipStr[i]) & 0xff);
+        }
+
         try {
-            server = new ServerSocket(8082);
-        } catch (IOException e) {
-            logger.warn(e);
+            InetAddress inetAddresd = InetAddress.getByAddress(ipBuf);
+            server = new ServerSocket(port, 5, inetAddresd);
+            // 读取客户端数据
+            logger.info("等待激光打码机客户端连接...");
+            //這裏得到激光打碼機socket
+            listenThread thread = new listenThread(server, mDataView);
+            thread.start();
+        } catch (Exception e) {
+            logger.warn("打码机端口异常: " + e.getMessage());
+            mDataView.append(DateUtil.formatInfo("打码机端口异常"));
+            EolStatus.getInstance().setEolStatus("Error");
         }
     }
 
-    public PrinterListener(ServerSocket printSeverSocket, JTextArea mDataView) {
-        this.server = printSeverSocket;
-        this.mDataView=mDataView;
+    public static PrinterListener getInstance(JTextArea mDataView) {
+        if (listener == null)
+            listener = new PrinterListener(mDataView);
+        return listener;
     }
 
-    public void setStatus(JTextArea status) {
-        this.status = status;
-    }
-
-    public Boolean getConnect() {
-        return isConnect;
-    }
-
-    public void setConnect(Boolean connect) {
-        isConnect = connect;
-    }
-
-    public ServerSocket getServer() {
-        return server;
-    }
-
-    public void setServer(ServerSocket server) {
-        this.server = server;
-    }
-
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public void setSocket(Socket socket) {
-        this.socket = socket;
+    public void setSocket(Socket s) {
+        socket = s;
     }
 
     public void closePort() {
@@ -74,54 +68,81 @@ public class PrinterListener extends Thread {
         }
     }
 
-    @Override
-    public void run() {
-        super.run();
-        try {
-            logger.info(DateUtil.formatInfo("等待激光打码机客户端连接..."));
-            //這裏得到激光打碼機socket
-            socket = server.accept();
-            this.setSocket(socket);
-            this.setConnect(true);
-            // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-            System.out.println(DateUtil.formatInfo("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功..."));
-            logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
-            InputStream in = socket.getInputStream();
-            int len = 0;
-            byte[] buf = new byte[1024];
-            synchronized (this) {
-                while ((len = in.read(buf)) != -1) {
-                    String message = new String(buf, 0, len, StandardCharsets.UTF_8);
-                    System.out.println(DateUtil.formatInfo("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message));
-                    logger.info("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
-                    mDataView.append("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
-                    this.notify();
-                }
-
-            }
-        } catch (IOException e) {
-            logger.warn(e);
-        }
-
-    }
-
     public void sendMessage(String message) {
-        OutputStream out = null;
         try {
             if (socket != null) {
-                out = socket.getOutputStream();
-                out.write(("" + message).getBytes(StandardCharsets.UTF_8));
+                OutputStream out = socket.getOutputStream();
+                logger.info(message);
+                logger.info(("" + message).getBytes(StandardCharsets.UTF_8));
+                //out.write(("" + message).getBytes(StandardCharsets.UTF_8));
+                out.write(message.getBytes());
                 out.flush();// 清空缓存区的内容
+
+                try {
+                    wait(2000);
+                } catch (Exception exp) {
+
+                }
+                // logger.warn("打码机打码确认超时");
+                // mDataView.append(DateUtil.formatInfo("打码机打码确认超时"));
+
+                InputStream in = socket.getInputStream();
+                int len = 0;
+                byte[] buf = new byte[1024];
+                synchronized (this) {
+                    while ((len = in.read(buf)) != -1) {
+                        message = new String(buf, 0, len, StandardCharsets.UTF_8);
+                        logger.info("打码结束: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
+                        mDataView.append(DateUtil.formatInfo("打码结束"));
+                        this.notify();
+                    }
+                }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.warn("打码机打码发送信息错误" + e.getMessage());
+            mDataView.append(DateUtil.formatInfo("打码机打码发送信息错误"));
+            EolStatus.getInstance().setEolStatus("Error");
         }
+    }
+}
 
+class listenThread extends Thread {
+    private static final Log logger = LogFactory.getLog(listenThread.class);
+
+    ServerSocket server;
+    JTextArea mDataView;
+
+    public listenThread(ServerSocket server, JTextArea mDataView) {
+        this.server = server;
+        this.mDataView = mDataView;
     }
 
-/*    // 函数入口
-    public static void main(String[] args) {
-        NetPortListener server = new NetPortListener(1234);
-        server.start();
-    }*/
+    @Override
+    public void run() {
+        synchronized (this) {
+            try {
+                while (true) {
+                    Socket socket = server.accept();
+                    PrinterListener.getInstance(mDataView).setSocket(socket);
+                    // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
+                    logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
+                    InputStream in = socket.getInputStream();
+                    int len = 0;
+                    byte[] buf = new byte[1024];
+                    synchronized (this) {
+                        while ((len = in.read(buf)) != -1) {
+                            String message = new String(buf, 0, len, StandardCharsets.UTF_8);
+                            logger.info("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
+                            mDataView.append(DateUtil.formatInfo("打码机已连接"));
+                            this.notify();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("激光打码机端口侦听异常: " + e.getMessage());
+                mDataView.append(DateUtil.formatInfo("激光打码机端口侦听异常"));
+                EolStatus.getInstance().setEolStatus("Error");
+            }
+        }
+    }
 }

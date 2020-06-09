@@ -40,7 +40,6 @@ public final class QRCodeGenerator {
                     break;
             }
         } catch (Exception exp) {
-
             if ("ZZZZZZ".equals(seq))
                 return "000001";
 
@@ -113,7 +112,7 @@ public final class QRCodeGenerator {
         String seqNumber = getSeqNumber(lastOne);
         String barcode = calQRCode(factory, seqNumber);
 
-        logger.info("barcode result: " + barcode);
+        logger.debug("barcode result: " + barcode);
         return barcode;
     }
 

@@ -68,8 +68,6 @@ public class KeySightDevice {
                 return false;
             }
             logger.info("连接ip=" + ip + "的设备成功");
-
-            // TODO: 界面上，TextArea增加一行"设备 + DefaultDevicesConfig.eleName + 连接成功"
         } catch (Exception e) {
             logger.error(e);
             // TODO: 通知主控，设备有错
@@ -125,10 +123,10 @@ public class KeySightDevice {
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
             logger.error("执行命令失败,result=" + result);
             // TODO: 界面上TEXTAREA上显示"'执行命令失败,result=' + result"
-            mDataView.append(DateUtil.formatInfo("执行命令失败"));
+            mDataView.append(DateUtil.formatInfo("执行命令失败：" + cmdStr));
             // TODO: 界面上此设备状态显示为Red
-            eolStatus.set("RED");
-            mDataView.append(DateUtil.formatInfo("设备状态: " + eolStatus.get()));
+            eolStatus.set("Error");
+            // mDataView.append(DateUtil.formatInfo("设备状态: " + eolStatus.get()));
             // TODO: 通知主控，设备有错
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("Error", "xxx");

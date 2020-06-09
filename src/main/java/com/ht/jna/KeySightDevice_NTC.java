@@ -1,6 +1,9 @@
 package com.ht.jna;
 
+import com.ht.base.SpringContext;
+import com.ht.entity.Devices;
 import com.ht.entity.EolStatus;
+import com.ht.repository.DevicesRepo;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLong;
 import com.sun.jna.ptr.LongByReference;
@@ -9,6 +12,7 @@ import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
 import java.io.DataOutputStream;
+import java.util.Optional;
 
 public class KeySightDevice_NTC {
     private static final Log logger = LogFactory.getLog(KeySightDevice_NTC.class);
@@ -22,6 +26,8 @@ public class KeySightDevice_NTC {
     private LongByReference VI_ATTR_SUPPRESS_END_EN;
     private LongByReference VI_ATTR_TERMCHAR_EN;
 
+    String rIp = "169.254.210.4";
+
     public KeySightDevice_NTC() {
         KEYSIGHTINSTANCE = KeySightVic_NTC.KEYSIGHTNTC;
     }
@@ -31,41 +37,27 @@ public class KeySightDevice_NTC {
         if (isOpened) {
             return true;
         }
-//        try {
-//            Socket s = new Socket("192.168.1.110",5024);
-//        } catch (IOException e) {
-//            log.error("连接设备失败");
-//            return false;
-//        }
-//        defaultSession = new LongByReference(getStartInf());
+
         try {
-            /*String path = "D:\\台架\\keysight.xlsx";
-            InputStream inputStream = null;
-            inputStream = new FileInputStream(path);
-            Workbook workbook = WorkbookFactory.create(inputStream);
-            Sheet sheet = workbook.getSheet("IP");
-            String rIp = sheet.getRow(2).getCell(1).getStringCellValue();*/
-            String rIp = "169.254.210.4";
             defaultSession = new LongByReference(59005407);
-        int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
-        if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            mDataView.append("KeySightDevice_NTC open  error ...");
-            return false;
-        }
-        vipSession = new LongByReference(0);
-        String cmd = "TCPIP0::"+rIp+"::inst0::INSTR";
-//        String cmd = "TCPIP0::192.168.0.120::5024::SOCKET";
-//        String cmd = "USB0::0x2A8D::0x1301::MY59000220::0::INSTR";
-        NativeLong a = new NativeLong(defaultSession.getValue());
-        NativeLong b = new NativeLong(0);
-        result = KEYSIGHTINSTANCE.viOpen(a, cmd, b, b, vipSession);
-        if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            return false;
-        }
-            System.out.println("连接ip="+rIp+"的设备成功");
+            int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
+            if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+                mDataView.append("KeySightDevice " + rIp + "open  error ...");
+                return false;
+            }
+            vipSession = new LongByReference(0);
+            String cmd = "TCPIP0::" + rIp + "::inst0::INSTR";
+            // String cmd = "TCPIP0::192.168.0.120::5024::SOCKET";
+            // String cmd = "USB0::0x2A8D::0x1301::MY59000220::0::INSTR";
+            NativeLong a = new NativeLong(defaultSession.getValue());
+            NativeLong b = new NativeLong(0);
+            result = KEYSIGHTINSTANCE.viOpen(a, cmd, b, b, vipSession);
+            if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+                return false;
+            }
+            logger.info("连接ip=" + rIp + "的设备成功");
         } catch (Exception e) {
-            logger.debug(e.getMessage());
-            e.printStackTrace();
+            logger.error(e);
         }
         isOpened = true;
         return true;
@@ -75,16 +67,16 @@ public class KeySightDevice_NTC {
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viClose(a);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println(result);
+            logger.debug(result);
             return false;
         }
         NativeLong b = new NativeLong(defaultSession.getValue());
         result = KEYSIGHTINSTANCE.viClose(b);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println("KeySight退出远程模式失败");
+            logger.warn("KeySight" + rIp + "退出远程模式失败");
             return false;
         }
-        System.out.println("KeySight退出远程模式成功");
+        logger.info("KeySight" + rIp + "退出远程模式成功");
         return true;
     }
 
@@ -105,14 +97,13 @@ public class KeySightDevice_NTC {
         return result == KEYSIGHTINSTANCE.STATUS_OK;
     }
 
-    public Boolean writeCmd(String cmdStr, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
-//        VI_ATTR_SUPPRESS_END_EN();
-//        VI_ATTR_TERMCHAR_EN();
+    public Boolean writeCmd(String cmdStr) {
+        // VI_ATTR_SUPPRESS_END_EN();
+        // VI_ATTR_TERMCHAR_EN();
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println("NTC - 执行命令"+ cmdStr + "失败，result=" + result);
-            mDataView.append("NTC - 执行命令"+ cmdStr + "失败，result=" + result);
+            logger.warn(rIp + "- 执行命令" + cmdStr + "失败，result = " + result);
         }
         return true;
     }
@@ -122,8 +113,7 @@ public class KeySightDevice_NTC {
         Memory mem = new Memory(200);
         int result = KEYSIGHTINSTANCE.viScanf(a, "%t", mem);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-
-            System.out.println(result);
+            logger.debug(result);
             return null;
         }
         return mem.getString(0);
@@ -131,17 +121,15 @@ public class KeySightDevice_NTC {
 
 
     public boolean setRCONF() {
-
-        if (writeCmd("CONF:RES 1000000", null, null, null)/*&&writeCmd("CONF:RESistance 1000000")*/) {
-            System.out.println("设置为电阻模式");
+        if (writeCmd("CONF:RES 1000000") && writeCmd("CONF:RESistance 1000000")) {
+            logger.info("设置" + rIp + "为电阻模式");
             try {
                 Thread.sleep(30);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e);
             }
             return true;
         }
         return false;
     }
-
 }

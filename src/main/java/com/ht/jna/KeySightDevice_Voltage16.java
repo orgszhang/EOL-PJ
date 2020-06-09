@@ -25,6 +25,8 @@ public class KeySightDevice_Voltage16 {
     private LongByReference VI_ATTR_SUPPRESS_END_EN;
     private LongByReference VI_ATTR_TERMCHAR_EN;
 
+    String curIp = "169.254.210.3";
+
     public KeySightDevice_Voltage16() {
         KEYSIGHTINSTANCE = KeySightVci_Voltage.KEYSIGHTINSTANCE;
     }
@@ -35,18 +37,10 @@ public class KeySightDevice_Voltage16 {
         }
 
         try {
-            /*String path = "D:\\台架\\keysight.xlsx";
-            InputStream inputStream = null;
-            inputStream = new FileInputStream(path);
-            Workbook workbook = WorkbookFactory.create(inputStream);
-            Sheet sheet = workbook.getSheet("IP");
-            String curIp = sheet.getRow(3).getCell(1).getStringCellValue();  //
-            // System.out.println("连接 1-6 的设备. IP..." + curIp);*/
-            String curIp = "169.254.210.3";
             defaultSession = new LongByReference(59005407);
             int result = KEYSIGHTINSTANCE.viOpenDefaultRM(defaultSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-                // System.out.println("连接 1-6 的设备....");
+                mDataView.append("KeySightDevice " + curIp + " open  error ...");
                 return false;
             }
             vipSession = new LongByReference(0);
@@ -55,15 +49,12 @@ public class KeySightDevice_Voltage16 {
             NativeLong b = new NativeLong(0);
             result = KEYSIGHTINSTANCE.viOpen(a, cmd, b, b, vipSession);
             if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-                System.out.println("连接 1-6 的设备失败");
-                mDataView.append("KeySightDevice_Voltage16 open  error ...");
-
+                logger.warn("连接ip=" + curIp + "的设备失败！");
                 return false;
             }
-            System.out.println("连接ip=" + curIp + "的设备成功");
+            logger.info("连接ip=" + curIp + "的设备成功");
         } catch (Exception e) {
-            logger.debug(e.getMessage());
-            e.printStackTrace();
+            logger.error(e);
         }
         isOpened = true;
         return true;
@@ -73,16 +64,16 @@ public class KeySightDevice_Voltage16 {
         NativeLong a = new NativeLong(vipSession.getValue());
         int result = KEYSIGHTINSTANCE.viClose(a);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println(result);
+            logger.debug(result);
             return false;
         }
         NativeLong b = new NativeLong(defaultSession.getValue());
         result = KEYSIGHTINSTANCE.viClose(b);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println("KeySight退出远程模式失败");
+            logger.warn("KeySight" + curIp + "退出远程模式失败");
             return false;
         }
-        System.out.println("KeySight退出远程模式成功");
+        logger.info("KeySight" + curIp + "退出远程模式成功");
         return true;
     }
 
@@ -109,18 +100,15 @@ public class KeySightDevice_Voltage16 {
         return true;
     }
 
-    public Boolean writeCmd(String cmdStr, JTextArea mDataView, EolStatus eolStatus, DataOutputStream dos) {
-//        VI_ATTR_SUPPRESS_END_EN();
-//        VI_ATTR_TERMCHAR_EN();
+    public Boolean writeCmd(String cmdStr) {
+        // VI_ATTR_SUPPRESS_END_EN();
+        // VI_ATTR_TERMCHAR_EN();
 
-            NativeLong a = new NativeLong(vipSession.getValue());
-            int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
-            if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-                System.out.println("V16 - 执行命令" + cmdStr + "失败，result=" + result);
-                mDataView.append("V16 - 执行命令" + cmdStr + "失败，result=" + result);
-            }
-
-
+        NativeLong a = new NativeLong(vipSession.getValue());
+        int result = KEYSIGHTINSTANCE.viPrintf(a, "%s\n", cmdStr);
+        if (result != KEYSIGHTINSTANCE.STATUS_OK) {
+            logger.warn(curIp + " - 执行命令" + cmdStr + "失败，result = " + result);
+        }
         return true;
     }
 
@@ -130,13 +118,13 @@ public class KeySightDevice_Voltage16 {
             return true;
         }
         // if (writeCmd("FUNC \"VOLT:DC\"") && writeCmd("VOLT:RANG 10")) {
-        if (writeCmd("CONF:VOLT:DC 0.1", null, null, null) /*&& writeCmd("CONF:VOLT 0.1")*/) {
-            System.out.println("设置为DC电压模式");
+        if (writeCmd("CONF:VOLT:DC 0.1") && writeCmd("CONF:VOLT 0.1")) {
+            logger.info("设置" + curIp + "为DC电压模式");
             isSetVol = true;
             try {
                 Thread.sleep(30);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e);
             }
             return true;
         }
@@ -149,7 +137,7 @@ public class KeySightDevice_Voltage16 {
         Memory mem = new Memory(200);
         int result = KEYSIGHTINSTANCE.viScanf(a, "%t", mem);
         if (result != KEYSIGHTINSTANCE.STATUS_OK) {
-            System.out.println(result);
+            logger.debug(result);
             return null;
         }
         return mem.getString(0);
