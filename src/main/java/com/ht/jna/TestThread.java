@@ -7,19 +7,12 @@ import com.ht.entity.EolStatus;
 import com.ht.entity.ProRecords;
 import com.ht.printer.PrinterListener;
 import com.ht.utils.DateUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.util.unit.DataUnit;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.text.NumberFormat;
-import java.util.Date;
 
 /**
  * @program: eol
@@ -32,7 +25,6 @@ public class TestThread extends Thread {
 
     KeySightManager keySightManager;
     JSONObject jsonObject;
-    // DataOutputStream dos;
     boolean production;
     boolean print;
 
@@ -48,10 +40,9 @@ public class TestThread extends Thread {
     JLabel labelQRCode = null;
     JTextArea mDataView = null;
 
-    public TestThread(KeySightManager keySightManager, JSONObject allDataJsonObject, /*DataOutputStream dos,*/ boolean production, boolean print) {
+    public TestThread(KeySightManager keySightManager, JSONObject allDataJsonObject, boolean production, boolean print) {
         this.keySightManager = keySightManager;
         this.jsonObject = allDataJsonObject;
-        // this.dos = dos;
         this.production = production;
         this.print = print;
 
@@ -103,7 +94,6 @@ public class TestThread extends Thread {
                 if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
                     labelResultOne.setText("合格");
                     labelResultOne.setForeground(Color.green);
-
                 } else {
                     labelResultOne.setText("不合格");
                     labelResultOne.setForeground(Color.red);
@@ -116,7 +106,7 @@ public class TestThread extends Thread {
                     labelResultTwo.setText("不合格");
                     labelResultTwo.setForeground(Color.red);
                 }
-                logger.info(proRecords.getProCode());
+
                 labelQRCode.setText(proRecords.getProCode());
 
                 if (null == proRecords || proRecords.getProCode() == null) {
@@ -131,7 +121,7 @@ public class TestThread extends Thread {
                         logger.info("开始打印二维码");
                         PrinterListener printerListener = PrinterListener.getInstance(mDataView);
                         if (production) {
-                            EolStatus.getInstance().setEolStatus("Finish"); // 这里有问题
+                            EolStatus.getInstance().setEolStatus("Finish"); // 这里有问题？？？
                         }
                         logger.info("测试完成！");
                         printerListener.sendMessage(proRecords.getProCode());
