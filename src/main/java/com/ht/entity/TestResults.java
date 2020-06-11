@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "testResults")
+@Table(name = "testresults")
 public class TestResults {
     /*
 
@@ -23,10 +23,10 @@ public class TestResults {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "VisualPartNumber")
+    @Column(name = "visual_part_number")
     private String visualPartNumber;
 
-    @Column(name = "MainCurr")
+    @Column(name = "maincurr")
     private double mainCurr;
     @Column(name = "V25")
     private double v25;
@@ -36,7 +36,7 @@ public class TestResults {
     private double v16;
     @Column(name = "R16")
     private double r16;
-    @Column(name = "ResistorOK")
+    @Column(name = "resistorOK")
     private boolean resistorOK;
 
     @Column(name = "RNTC")
@@ -45,7 +45,7 @@ public class TestResults {
     private double ntcT;
     @Column(name = "NTCOK")
     private boolean NTC_OK;
-    @Column(name = "TestTime")
+    @Column(name = "testtime")
     private Date testTime;
 
 

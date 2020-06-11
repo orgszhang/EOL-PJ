@@ -38,21 +38,12 @@ public class MainFrame extends JFrame {
         }
         mainFrame.setIconImage(image);
 
-        // PanelsVDB pvt = new PanelsVDB();
-        // PanelsV3 pvt = new PanelsV3();
         PanelsEOL pvt = new PanelsEOL();
         Container contentPane = mainFrame.getContentPane();
         contentPane.add(pvt);
 
         mainFrame.setVisible(true);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
- /*       this.addWindowListener(new WindowAdapter() {
-                                   public void windowClosing(WindowEvent e) {
-                                       System.out.println("触发windowClosing事件");
-                                       pvt.getManager().closeDivices();
-                                   }
-                               });*/
 
         stopWatch.stop();
         logger.info("Init KickOff down in " + stopWatch.getTotalTimeMillis() / 1000.0 + " seconds.");

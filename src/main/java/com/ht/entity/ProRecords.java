@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -11,13 +12,13 @@ import java.util.Date;
  */
 // @Data
 @Entity
-@Table(name = "ProRecords")
+@Table(name = "prorecords")
 public class ProRecords {
     @Id
-    @Column(name = "VisualPartNumber")
+    @Column(name = "visual_part_number")
     private String visualPartNumber;
 
-    @Column(name = "ResistorID")
+    @Column(name = "resistor_id")
     private String resistorID;   //
     @Column(name = "R25")
     private Double R25;   //
@@ -28,11 +29,11 @@ public class ProRecords {
     @Column(name = "TNTC")
     private Double Tntc;
 
-    @Column(name = "QRCode")
+    @Column(name = "qr_code")
     private String qrCode; // QRCode 二维码
-    @Column(name = "ProDate")
+    @Column(name = "pro_date")
     private Date proDate; //
-    @Column(name = "Comments")
+    @Column(name = "comments")
     private String comments;
 
     public void setVisualPartNumber(String visualPartNumber) {
@@ -109,6 +110,7 @@ public class ProRecords {
 
     @Override
     public String toString() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         return "ProRecords{" +
                 "visualPartNumber='" + visualPartNumber +
                 "', ResistorID='" + resistorID +
@@ -117,7 +119,7 @@ public class ProRecords {
                 ", Rntc=" + Rntc +
                 ", Tntc=" + Tntc +
                 ", QRCode='" + qrCode + '\'' +
-                ", ProDate='" + proDate + '\'' +
+                ", ProDate='" + sdf.format(proDate) + '\'' +
                 ", Comments='" + comments + '\'' +
                 "'}";
     }

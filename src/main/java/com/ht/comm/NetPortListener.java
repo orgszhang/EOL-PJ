@@ -2,30 +2,23 @@ package com.ht.comm;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.ht.entity.TestResults;
+import com.ht.entity.EolStatus;
 import com.ht.jna.KeySightManager;
-import com.ht.jna.TcpClient;
-import com.ht.printer.PrinterListener;
-import com.ht.utils.DateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Date;
-import java.util.Scanner;
 
-//123
-public class NetPortListener extends Thread {
+
+public class NetPortListener {
     private static final Log logger = LogFactory.getLog(NetPortListener.class);
+
     ServerSocket server = null;
-    Socket socket = null;
     JTextField codeField = null;
     JTextField qcField = null;
     JTextField temp = null;
@@ -37,17 +30,15 @@ public class NetPortListener extends Thread {
     JLabel labelResultTwo = null; //ntc结果
     JLabel labelQRCode = null;
     JTextArea mDataView = null;
-    ThreadLocal<String> eolStatus;
-    ServerSocket printSeverSocket;
-    Socket printSocket;
+    KeySightManager keySightManager;
+    JSONObject allDataJsonObject;
+    DataOutputStream dos;
 
-
-    public NetPortListener(int port, JSONObject jsonObject, ServerSocket printSeverSocket) {
+    public NetPortListener(KeySightManager manager, JSONObject jsonObject) {
         try {
-            server = new ServerSocket(port);
-            this.codeField = (JTextField) jsonObject.get("visualPartNumber");
-            this.qcField = (JTextField) jsonObject.get("textFieldResistorsID");
-            this.temp = (JTextField) jsonObject.get("textFieldTemp");
+            this.keySightManager = manager;
+            this.allDataJsonObject = jsonObject;
+
             this.codeField = (JTextField) jsonObject.get("visualPartNumber");
             this.qcField = (JTextField) jsonObject.get("textFieldResistorsID");
             this.temp = (JTextField) jsonObject.get("textFieldTemp");
@@ -59,173 +50,70 @@ public class NetPortListener extends Thread {
             this.labelResultTwo = (JLabel) jsonObject.get("labelResultTwo");
             this.labelQRCode = (JLabel) jsonObject.get("labelQRCode");
             this.mDataView = (JTextArea) jsonObject.get("mDataView");
-            this.eolStatus = (ThreadLocal<String>) jsonObject.get("eolStatus");
-            this.printSeverSocket = printSeverSocket;
-        } catch (IOException e) {
-            logger.warn(e);
+
+            String ipMainPLC = "192.168.10.80";
+            int port = 8088;
+
+            String[] ipStr = ipMainPLC.split("\\.");
+            byte[] ipBuf = new byte[4];
+            for (int i = 0; i < 4; i++) {
+                ipBuf[i] = (byte) (Integer.parseInt(ipStr[i]) & 0xff);
+            }
+
+            InetAddress inetAddresd = InetAddress.getByAddress(ipBuf);
+            try {
+                server = new ServerSocket(port, 5, inetAddresd);
+                acceptThread sendThread = new acceptThread(manager, jsonObject, server);
+                sendThread.start();
+            } catch (Exception e) {
+                EolStatus.getInstance().setEolStatus("Error");
+                logger.warn("主控PLC端口侦听异常: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            // EolStatus.getInstance().setEolStatus("Error");
+            logger.warn("主控PLC未知异常: " + e.getMessage());
         }
     }
 
-
-    public void closePort() {
-        try {
-            server.close();
-        } catch (IOException e) {
-            logger.warn(e);
+    public void close() {
+        if (server != null) {
+            try {
+                server.close();
+            } catch (IOException e) {
+               logger.warn(e);
+            }
         }
+        server = null;
     }
+}
 
+
+class acceptThread extends Thread {
+    private static final Log logger = LogFactory.getLog(acceptThread.class);
+
+    KeySightManager keySightManager;
+    JSONObject allDataJsonObject;
+    ServerSocket server;
+
+    public acceptThread(KeySightManager keySightManager, JSONObject jsonObject, ServerSocket server) {
+        this.keySightManager = keySightManager;
+        this.allDataJsonObject = jsonObject;
+        this.server = server;
+    }
 
     @Override
     public void run() {
-
-        super.run();
-        try {
-            System.out.println(DateUtil.getDate() + "  等待客户端连接...");
-            socket = server.accept();
-            new sendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-            System.out.println(DateUtil.getDate() + "  客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
-            InputStream in = socket.getInputStream();
-            int len = 0;
-            byte[] buf = new byte[1024];
-            synchronized (this) {
-                while ((len = in.read(buf)) != -1) {
-                    String message = new String(buf, 0, len, "UTF-8");
-                    System.out.println(DateUtil.getDate() + "  客户端: （" + socket.getInetAddress().getHostAddress() + "）说："
-                            + message);
-                    DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                    JSONObject jsonObject = JSONObject.parseObject(message);
-                    if (jsonObject.getString("Command").equals("QueryStatus")) {
-                        JSONObject result = new JSONObject();
-                        result.put("Command", "QueryStatus");
-                        JSONObject resultValue = new JSONObject();
-                        resultValue.put("EolStatus", eolStatus.get());
-                        result.put("ResultValue", resultValue);
-                        dos.write(result.toJSONString().getBytes());
-                    } else if (jsonObject.getString("Command").equals("TestAPart")) {
-                        eolStatus.set(eolStatus.get());
-                        codeField.setText(jsonObject.getString("VirtualPartNumber"));
-                        qcField.setText(jsonObject.getString("ResistorID"));
-                        KeySightManager keySightManager = new KeySightManager(); // TODO: ERROR
-
-                        // 开电源
-                        TcpClient client = new TcpClient();
-                        mDataView.append(new Date() + " - 测试开始 ...\r\n");
-                        client.open();
-/*
-                    ProRecords proRecords = keySightManager.testThePart(jsonObject.getString("code"), Double.valueOf(temp.getText()), jsonObject.getString("qc"),mDataView,eolStatus,dos);
-*/
-                        TestResults proRecords = keySightManager.pseudoDriveDevices(jsonObject.getString("code"), Double.valueOf(temp.getText()));
-                        client.close();
-
-                        /*       jsonObject.getString("qc"), mDataView, eolStatus, dos);*/
-                        textFieldRt_R25.setText(String.valueOf(proRecords.getR25()));
-                        textFieldRw_R16.setText(String.valueOf(proRecords.getR16()));
-                        textFieldRntc_NTCRValue.setText(String.valueOf(proRecords.getNtcT()));
-                        textFieldTemperature.setText(String.valueOf(proRecords.getNtcT()).toString());
-                        if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
-                            labelResultOne.setText("合格");
-                            labelResultOne.setForeground(Color.green);
-
-                        } else {
-                            labelResultOne.setText("不合格");
-                            labelResultOne.setForeground(Color.red);
-                        }
-
-                        if (Math.abs(proRecords.getNtcT() - Double.valueOf(temp.getText())) <= 3) {
-                            labelResultTwo.setText("合格");
-                            labelResultTwo.setForeground(Color.green);
-                        } else {
-                            labelResultTwo.setText("不合格");
-                            labelResultTwo.setForeground(Color.red);
-                        }
-                        labelQRCode.setText("#11D915743  000###*1GU D5V AABAUI3*#");
-                        //这里发送给printerSocket客户端----------------------------------------------
-                        Socket socketPrint = new PrinterListener().getSocket();
-                        DataOutputStream dosPrint = new DataOutputStream(socketPrint.getOutputStream());
-                        /*dosPrint.write(proRecords.getProCode().getBytes());*/
-                        String json = "#11D915743  000###*1GU D5V AABAUI3*#";
-                        /*    dosPrint.write(json.getBytes());*/
-                        System.out.println(json);
-
-                    } else if (jsonObject.getString("Command").equals("QueryResult")) {
-
-                    } else if (jsonObject.getString("Command").equals("DataSaved")) {
-
-                    }
-                    this.notify();
-                }
-
-
-            }
-        } catch (IOException e) {
-            logger.warn(e);
-        }
-
-    }
-
-
-    class printSendMessThread extends Thread {
-        @Override
-        public void run() {
-            super.run();
-            Scanner scanner = null;
-            OutputStream out = null;
+        synchronized (this) {
             try {
-                if (printSocket != null) {
-                    scanner = new Scanner(System.in);
-                    out = printSocket.getOutputStream();
-                    String in = "";
-                    do {
-                        in = scanner.next();
-                        out.write(("" + in).getBytes("UTF-8"));
-                        out.flush();// 清空缓存区的内容
-                    } while (!in.equals("q"));
-                    scanner.close();
-                    try {
-                        out.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                while (true) {
+                    Socket socket = server.accept();
+                    sendMessageThread messageThread = new sendMessageThread(keySightManager, allDataJsonObject, socket);
+                    messageThread.start();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception i) {
+                logger.error("处理信息错误" + i.getMessage());
             }
         }
     }
-
-    class sendMessThread extends Thread {
-        @Override
-        public void run() {
-            super.run();
-            Scanner scanner = null;
-            OutputStream out = null;
-            try {
-                if (socket != null) {
-                    scanner = new Scanner(System.in);
-                    out = socket.getOutputStream();
-                    String in = "";
-                    do {
-                        in = scanner.next();
-                        out.write(("" + in).getBytes("UTF-8"));
-                        out.flush();// 清空缓存区的内容
-                    } while (!in.equals("q"));
-                    scanner.close();
-                    try {
-                        out.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-/*    // 函数入口
-    public static void main(String[] args) {
-        NetPortListener server = new NetPortListener(1234);
-        server.start();
-    }*/
 }
+
