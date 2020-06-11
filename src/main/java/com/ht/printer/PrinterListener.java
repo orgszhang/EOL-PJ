@@ -17,8 +17,9 @@ import java.nio.charset.StandardCharsets;
 public class PrinterListener {
     private static final Log logger = LogFactory.getLog(PrinterListener.class);
 
-    private static Socket socket = null;
     static PrinterListener listener;
+    private static Socket socket = null;
+
 
     ServerSocket server = null;
     JTextArea mDataView = null;
@@ -41,7 +42,7 @@ public class PrinterListener {
             // 读取客户端数据
             logger.info("等待激光打码机客户端连接...");
             //這裏得到激光打碼機socket
-            listenThread thread = new listenThread(server, mDataView);
+            ListenThread thread = new ListenThread(server, mDataView);
             thread.start();
         } catch (Exception e) {
             logger.warn("打码机端口异常: " + e.getMessage());
@@ -74,8 +75,7 @@ public class PrinterListener {
                 OutputStream out = socket.getOutputStream();
                 logger.info(message);
                 logger.info(("" + message).getBytes(StandardCharsets.UTF_8));
-                //out.write(("" + message).getBytes(StandardCharsets.UTF_8));
-                out.write(message.getBytes());
+                out.write(("" + message).getBytes(StandardCharsets.UTF_8));
                 out.flush();// 清空缓存区的内容
 
                 try {
@@ -83,8 +83,6 @@ public class PrinterListener {
                 } catch (Exception exp) {
 
                 }
-                // logger.warn("打码机打码确认超时");
-                // mDataView.append(DateUtil.formatInfo("打码机打码确认超时"));
 
                 InputStream in = socket.getInputStream();
                 int len = 0;
@@ -93,7 +91,7 @@ public class PrinterListener {
                     while ((len = in.read(buf)) != -1) {
                         message = new String(buf, 0, len, StandardCharsets.UTF_8);
                         logger.info("打码结束: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
-                        mDataView.append(DateUtil.formatInfo("打码结束"));
+                        mDataView.append(DateUtil.formatInfo("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）打码结束：" + message));
                         this.notify();
                     }
                 }
@@ -102,47 +100,6 @@ public class PrinterListener {
             logger.warn("打码机打码发送信息错误" + e.getMessage());
             mDataView.append(DateUtil.formatInfo("打码机打码发送信息错误"));
             EolStatus.getInstance().setEolStatus("Error");
-        }
-    }
-}
-
-class listenThread extends Thread {
-    private static final Log logger = LogFactory.getLog(listenThread.class);
-
-    ServerSocket server;
-    JTextArea mDataView;
-
-    public listenThread(ServerSocket server, JTextArea mDataView) {
-        this.server = server;
-        this.mDataView = mDataView;
-    }
-
-    @Override
-    public void run() {
-        synchronized (this) {
-            try {
-                while (true) {
-                    Socket socket = server.accept();
-                    PrinterListener.getInstance(mDataView).setSocket(socket);
-                    // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
-                    logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
-                    InputStream in = socket.getInputStream();
-                    int len = 0;
-                    byte[] buf = new byte[1024];
-                    synchronized (this) {
-                        while ((len = in.read(buf)) != -1) {
-                            String message = new String(buf, 0, len, StandardCharsets.UTF_8);
-                            logger.info("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
-                            mDataView.append(DateUtil.formatInfo("打码机已连接"));
-                            this.notify();
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                logger.warn("激光打码机端口侦听异常: " + e.getMessage());
-                mDataView.append(DateUtil.formatInfo("激光打码机端口侦听异常"));
-                EolStatus.getInstance().setEolStatus("Error");
-            }
         }
     }
 }
