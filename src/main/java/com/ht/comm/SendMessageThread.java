@@ -105,15 +105,23 @@ class SendMessageThread extends Thread {
                                 JSONObject js = new JSONObject();
                                 js.put("EolStatus", EolStatus.getInstance().getEolStatus());
 
-                                // TODO: 如果没有分配到二维码，并不意味着没有测试啊~~能不能还是在主控里存结果？
-                                if (null == proRecords || StringUtils.isEmpty(proRecords.getProCode())) {
+                                if (null == proRecords) { // 无测试数据
                                     js.put("testResult", "fail");
                                     result.put("ResultValue", js);
                                     logger.info(result.toJSONString());
                                     out.write(("" + result.toJSONString()).getBytes(StandardCharsets.UTF_8));
                                     out.flush();// 清空缓存区的内容
-                                } else {
-                                    String str = JSONObject.toJSONString(proRecords);
+                                } else if (StringUtils.isEmpty(proRecords.getProCode())) { // 数据有错，没有生成二维码
+                                    String str = JSONObject.toJSONStringWithDateFormat(proRecords, "yyyy-MM-dd HH:mm:ss:S");
+                                    JSONObject json = JSONObject.parseObject(str);
+                                    json.put("testResult", "fail");
+                                    js.putAll(json);
+                                    result.put("ResultValue", js);
+                                    logger.info(result.toJSONString());
+                                    out.write(("" + result.toJSONString()).getBytes(StandardCharsets.UTF_8));
+                                    out.flush();
+                                } else {  // 测试成功
+                                    String str = JSONObject.toJSONStringWithDateFormat(proRecords, "yyyy-MM-dd HH:mm:ss:S");
                                     JSONObject json = JSONObject.parseObject(str);
                                     json.put("testResult", "success");
                                     js.putAll(json);
