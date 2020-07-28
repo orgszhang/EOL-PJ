@@ -124,7 +124,13 @@ public class TestThread extends Thread {
                             EolStatus.getInstance().setEolStatus("Finish"); // 这里有问题？？？
                         }
                         logger.info("测试完成！");
-                        printerListener.sendMessage(proRecords.getProCode());
+                        String s = proRecords.getProCode();
+                        printerListener.sendMessage(s);
+                        // System.out.println("BBBBBBBBBBBBB");
+                        String facid = s.substring(1, 10);
+                        // System.out.println(facid);
+                        printerListener.sendMessage(facid);
+                        // System.out.println("CCCCCCCCCCCCC");
                     }
                 }
             }

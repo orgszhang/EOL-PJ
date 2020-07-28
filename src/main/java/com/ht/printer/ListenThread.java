@@ -29,7 +29,6 @@ public class ListenThread extends Thread {
                 while (true) {
                     Socket socket = server.accept();
                     PrinterListener.getInstance(mDataView).setSocket(socket);
-                    // new PrinterSendMessThread().start();// 连接并返回socket后，再启用发送消息线程
                     logger.info("激光打码机客户端 （" + socket.getInetAddress().getHostAddress() + "） 连接成功...");
                     InputStream in = socket.getInputStream();
                     int len = 0;
@@ -41,6 +40,7 @@ public class ListenThread extends Thread {
                             mDataView.append(DateUtil.formatInfo("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）说：" + message));
                             this.notify();
                         }
+                        // System.out.println("AAAAAAAAAAAA");
                     }
                 }
             } catch (Exception e) {

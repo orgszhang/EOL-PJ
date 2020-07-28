@@ -50,7 +50,7 @@ class SendMessageThread extends Thread {
                     String clientInputStr = null;
 
                     int len = 0;
-                    byte[] buf = new byte[1024];
+                    byte[] buf = new byte[200];
                     synchronized (this) {
                         while ((len = in.read(buf)) != -1) {
                             clientInputStr = new String(buf, 0, len, StandardCharsets.UTF_8);
@@ -105,23 +105,23 @@ class SendMessageThread extends Thread {
                                 JSONObject js = new JSONObject();
                                 js.put("EolStatus", EolStatus.getInstance().getEolStatus());
 
-                                if (null == proRecords) { // 无测试数据
+                                if (null == proRecords) { // 测试结果为空
                                     js.put("testResult", "fail");
                                     result.put("ResultValue", js);
                                     logger.info(result.toJSONString());
                                     out.write(("" + result.toJSONString()).getBytes(StandardCharsets.UTF_8));
                                     out.flush();// 清空缓存区的内容
-                                } else if (StringUtils.isEmpty(proRecords.getProCode())) { // 数据有错，没有生成二维码
-                                    String str = JSONObject.toJSONStringWithDateFormat(proRecords, "yyyy-MM-dd HH:mm:ss:S");
+                                } else if (StringUtils.isEmpty(proRecords.getProCode())) { // 二维码为空
+                                    String str = JSONObject.toJSONString(proRecords);
                                     JSONObject json = JSONObject.parseObject(str);
-                                    json.put("testResult", "fail");
+                                    js.put("testResult", "fail");
                                     js.putAll(json);
                                     result.put("ResultValue", js);
                                     logger.info(result.toJSONString());
                                     out.write(("" + result.toJSONString()).getBytes(StandardCharsets.UTF_8));
-                                    out.flush();
-                                } else {  // 测试成功
-                                    String str = JSONObject.toJSONStringWithDateFormat(proRecords, "yyyy-MM-dd HH:mm:ss:S");
+                                    out.flush();// 清空缓存区的内容
+                                } else { // 测试成功
+                                    String str = JSONObject.toJSONString(proRecords);
                                     JSONObject json = JSONObject.parseObject(str);
                                     json.put("testResult", "success");
                                     js.putAll(json);

@@ -110,7 +110,7 @@ public class ProRecords {
 
     @Override
     public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:fff");
         return "ProRecords{" +
                 "visualPartNumber='" + visualPartNumber +
                 "', ResistorID='" + resistorID +

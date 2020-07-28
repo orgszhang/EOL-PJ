@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -69,13 +70,13 @@ public class PrinterListener {
         }
     }
 
-    public void sendMessage(String message) {
+    public synchronized void sendMessage(String qrcode) {
         try {
             if (socket != null) {
                 OutputStream out = socket.getOutputStream();
-                logger.info(message);
-                logger.info(("" + message).getBytes(StandardCharsets.UTF_8));
-                out.write(("" + message).getBytes(StandardCharsets.UTF_8));
+                logger.info(qrcode);
+                logger.info(("" + qrcode).getBytes(StandardCharsets.UTF_8));
+                out.write(("" + qrcode).getBytes(StandardCharsets.UTF_8));
                 out.flush();// 清空缓存区的内容
 
                 try {
@@ -84,17 +85,29 @@ public class PrinterListener {
 
                 }
 
-                InputStream in = socket.getInputStream();
-                int len = 0;
-                byte[] buf = new byte[1024];
+                // InputStream in = socket.getInputStream();
+
+                /*BufferedReader bis = new BufferedReader(new InputStreamReader(in));
+                String line;
+                while((line = bis.readLine()) != null){
+                    logger.info("打码结束: （" + socket.getInetAddress().getHostAddress() + "）说：" + line);
+                    mDataView.append(DateUtil.formatInfo("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）打码结束：" + line));
+                    this.notify();
+                }
+*/
+
+                /*int len = 0;
+                byte[] buf = new byte[20];
                 synchronized (this) {
-                    while ((len = in.read(buf)) != -1) {
-                        message = new String(buf, 0, len, StandardCharsets.UTF_8);
+                    len = in.read(buf);
+                    System.out.println(len);
+                    // while ((len = in.read(buf)) != -1) {
+                        String message = new String(buf, 0, len, StandardCharsets.UTF_8);
                         logger.info("打码结束: （" + socket.getInetAddress().getHostAddress() + "）说：" + message);
                         mDataView.append(DateUtil.formatInfo("激光打码机客户端: （" + socket.getInetAddress().getHostAddress() + "）打码结束：" + message));
                         this.notify();
-                    }
-                }
+                    // }
+                }*/
             }
         } catch (IOException e) {
             logger.warn("打码机打码发送信息错误" + e.getMessage());
