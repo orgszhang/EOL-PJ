@@ -385,8 +385,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         //row 2
         testResultPanel.add(new HTSSLabel("电阻Rt"));
-        testResultPanel.add(new HTSSLabel("78.75"));
-        testResultPanel.add(new HTSSLabel("71.25"));
+        testResultPanel.add(new HTSSLabel("内控"));
+        testResultPanel.add(new HTSSLabel("内控"));
         JPanel tbPanel1 = new JPanel();
         tbPanel1.setBackground(UIConstant.BGCOLOR_BLUE);
         textFieldRt_R25.setPreferredSize(UIConstant.INPUT_LONGDIMENSION);
@@ -395,8 +395,8 @@ public class PanelsEOL extends JPanel implements ActionListener {
 
         //row 3
         testResultPanel.add(new HTSSLabel("电阻Rw"));
-        testResultPanel.add(new JLabel());
-        testResultPanel.add(new JLabel());
+        testResultPanel.add(new HTSSLabel("71.25"));
+        testResultPanel.add(new HTSSLabel("78.75"));
         JPanel tbPanel2 = new JPanel();
         tbPanel2.setBackground(UIConstant.BGCOLOR_BLUE);
         textFieldRw_R16.setPreferredSize(UIConstant.INPUT_LONGDIMENSION);

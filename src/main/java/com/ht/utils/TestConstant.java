@@ -8,7 +8,7 @@ public class TestConstant {
 
     public static double RESISTOR_EXP = 75;
     public static double RESISTOR_TOLERANCE = 0.05;
-    public static int TEMP_GAP = 3;
+    public static int TEMP_GAP = 5;
 
     public static String SVW = "11D915743";
     public static String FAW = "11G915743";

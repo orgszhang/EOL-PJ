@@ -7,6 +7,7 @@ import com.ht.entity.EolStatus;
 import com.ht.entity.ProRecords;
 import com.ht.printer.PrinterListener;
 import com.ht.utils.DateUtil;
+import com.ht.utils.TestConstant;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -91,7 +92,11 @@ public class TestThread extends Thread {
                 textFieldRntc_NTCRValue.setText(ddf.format(proRecords.getRntc()));
                 textFieldTemperature.setText(ddf.format(proRecords.getTntc()));
 
-                if ((proRecords.getR25() < 78.25 && proRecords.getR25() > 71.75)) {
+                double up = TestConstant.RESISTOR_EXP * (1 + TestConstant.RESISTOR_TOLERANCE);
+                double low = TestConstant.RESISTOR_EXP * (1 - TestConstant.RESISTOR_TOLERANCE);
+                if ((proRecords.getR25() < (up - 0.5) && proRecords.getR25() > (low + 0.5))
+                        && (proRecords.getR16() < up && proRecords.getR16() > low))
+                {
                     labelResultOne.setText("合格");
                     labelResultOne.setForeground(Color.green);
                 } else {
@@ -99,7 +104,7 @@ public class TestThread extends Thread {
                     labelResultOne.setForeground(Color.red);
                 }
 
-                if (Math.abs(proRecords.getTntc() - Double.valueOf(temp.getText())) <= 3) {
+                if (Math.abs(proRecords.getTntc() - Double.valueOf(temp.getText())) <= TestConstant.TEMP_GAP) {
                     labelResultTwo.setText("合格");
                     labelResultTwo.setForeground(Color.green);
                 } else {
@@ -108,6 +113,7 @@ public class TestThread extends Thread {
                 }
 
                 labelQRCode.setText(proRecords.getProCode());
+                mDataView.append(DateUtil.formatInfo("电阻偏差：" + proRecords.getComments()));
 
                 if (null == proRecords || proRecords.getProCode() == null) {
                     logger.info("无二维码");

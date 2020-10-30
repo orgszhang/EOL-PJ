@@ -1,12 +1,10 @@
 package com.ht.jna;
 
 import com.ht.base.SpringContext;
-import com.ht.entity.EolStatus;
-import com.ht.entity.LatestQRCodes;
-import com.ht.entity.ProRecords;
-import com.ht.entity.TestResults;
+import com.ht.entity.*;
 import com.ht.repository.LatestQRCodeRepo;
 import com.ht.repository.ProRecordsRepo;
+import com.ht.repository.ShuntResistorsRepo;
 import com.ht.repository.TestResultsRepo;
 import com.ht.utils.QRCodeGenerator;
 import com.ht.utils.TempCalculator;
@@ -187,7 +185,24 @@ public class KeySightManager {
         thePart.setRntc(avgRntc);
         thePart.setTntc(TempCalculator.QCalTemp(avgRntc));
 
-        if (judgeResistor && judgeNTC) {
+
+        /* 2020-10-30 查原厂阻值 */
+        double t = 100.0d;
+        try {
+            ShuntResistorsRepo repo = SpringContext.getBean(ShuntResistorsRepo.class);
+            Optional<ShuntResistors> oneRow = repo.findById(resistorID);
+            double facrv = oneRow.get().getRValue();
+            t = Math.abs(avgR25 - facrv) / facrv;
+            thePart.setComments(String.valueOf(t));
+        } catch (Exception e) {
+            String aa = "Cannot find factory resistor id " + resistorID + " in database.";
+            thePart.setComments(aa);
+            logger.warn(aa);
+            logger.warn(e);
+        }
+
+
+        if (judgeResistor && judgeNTC && t <= 0.01) {
             thePart.setProCode(maintainQRCode(visualPartNumber, production));
         } else {
             thePart.setProCode(null);
