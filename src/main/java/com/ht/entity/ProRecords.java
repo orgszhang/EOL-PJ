@@ -36,6 +36,13 @@ public class ProRecords {
     @Column(name = "comments")
     private String comments;
 
+    /* 2020-11-04 增加零漂 */
+    @Column(name = "zerov25")
+    private double zerov25;
+    @Column(name = "zerov16")
+    private double zerov16;
+
+
     public void setVisualPartNumber(String visualPartNumber) {
         this.visualPartNumber = visualPartNumber;
     }
@@ -84,6 +91,23 @@ public class ProRecords {
         Tntc = Double.valueOf(ntcTValue);
     }
 
+    /* 2020-11-04 增加零漂 */
+    public Double getZerov25() {
+        return zerov25;
+    }
+
+    public void setZerov25(double zv25) {
+        zerov25 = Double.valueOf(zv25);
+    }
+
+    public Double getZerov16() {
+        return zerov16;
+    }
+
+    public void setZerov16(double zv16) {
+        zerov16 = Double.valueOf(zv16);
+    }
+
     public String getProCode() {
         return qrCode;
     }
@@ -110,7 +134,7 @@ public class ProRecords {
 
     @Override
     public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:fff");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");  // 2020-11-05 修正格式 S是毫秒
         return "ProRecords{" +
                 "visualPartNumber='" + visualPartNumber +
                 "', ResistorID='" + resistorID +
@@ -118,6 +142,8 @@ public class ProRecords {
                 ", R16=" + R16 +
                 ", Rntc=" + Rntc +
                 ", Tntc=" + Tntc +
+                ", zerov25=" + zerov25 + /* 2020-11-04 增加零漂 */
+                ", zerov16=" + zerov16 +
                 ", QRCode='" + qrCode + '\'' +
                 ", ProDate='" + sdf.format(proDate) + '\'' +
                 ", Comments='" + comments + '\'' +

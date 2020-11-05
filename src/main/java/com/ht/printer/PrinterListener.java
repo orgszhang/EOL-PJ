@@ -75,7 +75,7 @@ public class PrinterListener {
             if (socket != null) {
                 OutputStream out = socket.getOutputStream();
                 logger.info(qrcode);
-                logger.info(("" + qrcode).getBytes(StandardCharsets.UTF_8));
+                // logger.info(("" + qrcode).getBytes(StandardCharsets.UTF_8));
                 out.write(("" + qrcode).getBytes(StandardCharsets.UTF_8));
                 out.flush();// 清空缓存区的内容
 

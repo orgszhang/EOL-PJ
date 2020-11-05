@@ -12,4 +12,7 @@ public class TestConstant {
 
     public static String SVW = "11D915743";
     public static String FAW = "11G915743";
+
+    public static int ZEROV_TIMES = 3;
+    public static double ZEROV_UPPER = 0.000003d;
 }

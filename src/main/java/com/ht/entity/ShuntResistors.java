@@ -13,12 +13,12 @@ public class ShuntResistors {
 
     @Id
     private String id;
-    @Column(name = "rvalue")
-    private float rValue;
-    @Column(name = "rValid")
-    private boolean rValid;
-    @Column(name = "usedBy")
-    private String usedBy;
+    @Column(name = "r_value")
+    private Double rValue;
+    @Column(name = "r_valid")
+    private Boolean rValid;
+    @Column(name = "comments")
+    private String comments;
 
     public String getID() {
         return id;
@@ -28,21 +28,21 @@ public class ShuntResistors {
         this.id = resistorID;
     }
 
-    public float getRValue() { return rValue; }
+    public Double getRValue() { return rValue; }
 
-    public void setRValue(float resistorValue) {
+    public void setRValue(Double resistorValue) {
         this.rValue = resistorValue;
     }
 
-    public boolean getRValid() { return rValid;   }
+    public Boolean getRValid() { return rValid;   }
 
-    public void setRValue(boolean resistorValid) { this.rValid = resistorValid;  }
+    public void setRValue(Boolean resistorValid) { this.rValid = resistorValid;  }
 
-    public String getUsedBy() {
-        return this.usedBy;
+    public String getComments() {
+        return this.comments;
     }
 
-    public void setUsedBy(String resistorUsedBy) {
-        this.usedBy = resistorUsedBy;
+    public void setComments(String resistorUsedBy) {
+        this.comments = resistorUsedBy;
     }
 }
