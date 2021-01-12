@@ -102,7 +102,9 @@ public final class QRCodeGenerator {
         int place = Math.floorMod(sum, 43);
 
         barcode = barcode + checksum.charAt(place);
-        barcode = barcode + "*#";
+        // 2020-12-10 修正二维码，结束符是=
+        // barcode = barcode + "*#";
+        barcode = barcode + "*=";
 
         return barcode;
     }

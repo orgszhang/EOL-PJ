@@ -67,16 +67,21 @@ class SendMessageThread extends Thread {
                                 out.write(("" + result.toJSONString()).getBytes(StandardCharsets.UTF_8));
                                 out.flush();
                             } else if (jsonObject.getString("Command").equals("StartTest")) {
+                                JSONObject params = JSONObject.parseObject(jsonObject.get("Parameter").toString());
+                                codeField.setText(params.getString("VirtualPartNumber"));
+                                qcField.setText(params.getString("ResistorID"));
+
                                 EolStatus.getInstance().setEolStatus("Busy");
                                 JSONObject result = new JSONObject();
                                 result.put("Command", "StartTest");
+                                JSONObject resultValue = new JSONObject();
+                                resultValue.put("visualPartNumber", params.getString("VirtualPartNumber"));
+                                result.put("ResultValue", resultValue);
                                 logger.info(result.toJSONString());
                                 out.write(("" + result.toJSONString()).getBytes(StandardCharsets.UTF_8));
                                 out.flush();// 清空缓存区的内容
 
-                                JSONObject params = JSONObject.parseObject(jsonObject.get("Parameter").toString());
-                                codeField.setText(params.getString("VirtualPartNumber"));
-                                qcField.setText(params.getString("ResistorID"));
+
                                 ExecutorService pool = Executors.newFixedThreadPool(1);
                                 try {
                                     pool.submit(new TestThread(keySightManager, allDataJsonObject, /*out, */true, true));

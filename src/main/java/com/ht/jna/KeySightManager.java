@@ -119,10 +119,13 @@ public class KeySightManager {
         }
 
         /* 2020-11-02 修改内控参数，与界面一致 */
-        double up = TestConstant.RESISTOR_EXP * (1 + TestConstant.RESISTOR_TOLERANCE);
-        double low = TestConstant.RESISTOR_EXP * (1 - TestConstant.RESISTOR_TOLERANCE);
-        if ((result.getR25() < (up - 0.5) && result.getR25() > (low + 0.5))
-                && (result.getR16() < up && result.getR16() > low))
+        // double up = TestConstant.RESISTOR_EXP * (1 + TestConstant.RESISTOR_TOLERANCE);
+        // double low = TestConstant.RESISTOR_EXP * (1 - TestConstant.RESISTOR_TOLERANCE);
+        // if ((result.getR25() < (up - 0.5) && result.getR25() > (low + 0.5))
+        //        && (result.getR16() < up && result.getR16() > low))
+        /* 2020-12-10 修改内控参数 */
+        if ((result.getR25() < TestConstant.inup && result.getR25() > TestConstant.inlow)
+                && (result.getR16() < TestConstant.up && result.getR16() > TestConstant.low))
         /*if (((Math.abs(result.getR25() - TestConstant.RESISTOR_EXP) / TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE)
                 && ((Math.abs(result.getR16() - TestConstant.RESISTOR_EXP) / TestConstant.RESISTOR_EXP) <= TestConstant.RESISTOR_TOLERANCE))*/ {
             result.setResistorOK(true);
@@ -199,7 +202,9 @@ public class KeySightManager {
         logger.debug("开始测试零漂");
         while (times < TestConstant.ZEROV_TIMES) {
             zerov = testZeroV();
-            if (Math.abs(zerov[0]) < TestConstant.ZEROV_TIMES || Math.abs(zerov[1]) < TestConstant.ZEROV_TIMES) {
+            // if (Math.abs(zerov[0]) < TestConstant.ZEROV_TIMES || Math.abs(zerov[1]) < TestConstant.ZEROV_TIMES) {
+            /* 2020-12-31 基于零漂上限检测；-1是因为检测设备自带1μ的误差 */
+            if ((Math.abs(zerov[0]) - 1) < TestConstant.ZEROV_UPPER || (Math.abs(zerov[1]) - 1) < TestConstant.ZEROV_UPPER) {
                 break;
             } else {
                 times++;
@@ -215,22 +220,23 @@ public class KeySightManager {
         thePart.setZerov16(zerov[1]);
 
         NumberFormat ddf = NumberFormat.getNumberInstance();
-        ddf.setMaximumFractionDigits(2);
+        ddf.setMaximumFractionDigits(4);
         logger.debug("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV & 零漂16 = " + ddf.format(zerov[1] * 1000000) + "μV");
+        if (Math.abs(zerov[0]) < 10 * TestConstant.ZEROV_TIMES) {
+            mDataView.append(DateUtil.formatInfo("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV"));
+        } else {
+            mDataView.append(DateUtil.formatInfo("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV - 错误"));
+        }
+        if (Math.abs(zerov[1]) < 10 * TestConstant.ZEROV_TIMES) {
+            mDataView.append(DateUtil.formatInfo("零漂16 = " + ddf.format(zerov[1] * 1000000) + "μV"));
+        } else {
+            mDataView.append(DateUtil.formatInfo("零漂16 = " + ddf.format(zerov[1] * 1000000) + "μV - 错误"));
+        }
+        /* 2020-11-05 控制屏幕滚动 */
+        mDataView.setCaretPosition(mDataView.getText().length());
 
-        /* 2020-11-05 判断条件：
-         * 1. 2-5脚小于3μV 且 1-6脚小于9μV
-         * 或者
-         * 2. 2-5脚小于9μV 且 1-6脚小于3μV
-         */
-        if ((Math.abs(zerov[0]) < TestConstant.ZEROV_TIMES && Math.abs(zerov[1]) < 3 * TestConstant.ZEROV_TIMES)
-                || (Math.abs(zerov[0]) < 3 * TestConstant.ZEROV_TIMES && Math.abs(zerov[1]) < TestConstant.ZEROV_TIMES)) {
-            /* 2020-11-05 控制显示 */
-            mDataView.append(DateUtil.formatInfo("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV & 零漂16 = "
-                    + ddf.format(zerov[1] * 1000000) + "μV"));
-            /* 2020-11-05 控制屏幕滚动 */
-            mDataView.setCaretPosition(mDataView.getText().length());
-
+        /* 2020-11-05 判断条件：2-5脚小于3μV 且 1-6脚小于9μV */
+        if (Math.abs(zerov[0]) < TestConstant.ZEROV_TIMES && Math.abs(zerov[1]) < 3 * TestConstant.ZEROV_TIMES) {
             // 开电源
             TcpClient client = new TcpClient();
             client.open();
@@ -259,7 +265,6 @@ public class KeySightManager {
             thePart.setRntc(avgRntc);
             thePart.setTntc(TempCalculator.QCalTemp(avgRntc));
 
-
             /* 2020-10-30 查原厂阻值 */
             double t = 100.0d;
             try {
@@ -269,7 +274,9 @@ public class KeySightManager {
                 t = Math.abs(avgR25 - facrv) / facrv;
                 ddf.setMaximumFractionDigits(4);
                 thePart.setComments(ddf.format(t * 100) + "%");
-                mDataView.append(DateUtil.formatInfo("电阻偏差：" + ddf.format(t * 100) + "%"));
+                mDataView.append(DateUtil.formatInfo("R = " + ddf.format(thePart.getR25()) + " (" + ddf.format(t * 100) + "%)" + " / " + ddf.format(thePart.getR16())));
+                mDataView.append(DateUtil.formatInfo("NTC = " + ddf.format(thePart.getRntc()) + " / " + ddf.format(thePart.getTntc())));
+
                 /* 2020-11-02 控制屏幕滚动 */
                 mDataView.setCaretPosition(mDataView.getText().length());
             } catch (Exception e) {
@@ -284,19 +291,6 @@ public class KeySightManager {
             } else {
                 thePart.setProCode(null);
             }
-        } else {
-            if (Math.abs(zerov[0]) < 3 * TestConstant.ZEROV_TIMES) {
-                mDataView.append(DateUtil.formatInfo("零漂25 = " + ddf.format(zerov[0] * 1000000)));
-            } else {
-                mDataView.append(DateUtil.formatInfo("零漂25错误"));
-            }
-            if (Math.abs(zerov[1]) < 3 * TestConstant.ZEROV_TIMES) {
-                mDataView.append(DateUtil.formatInfo("零漂16 = " + ddf.format(zerov[0] * 1000000)));
-            } else {
-                mDataView.append(DateUtil.formatInfo("零漂16错误"));
-            }
-            /* 2020-11-05 控制屏幕滚动 */
-            mDataView.setCaretPosition(mDataView.getText().length());
         }
 
         try {

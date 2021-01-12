@@ -8,6 +8,10 @@ public class TestConstant {
 
     public static double RESISTOR_EXP = 75;
     public static double RESISTOR_TOLERANCE = 0.05;
+    public static double up = RESISTOR_EXP * (1 + RESISTOR_TOLERANCE);
+    public static double low = RESISTOR_EXP * (1 - RESISTOR_TOLERANCE);
+    public static double inup = RESISTOR_EXP * (1 + RESISTOR_TOLERANCE - 0.005);
+    public static double inlow = RESISTOR_EXP * (1 - RESISTOR_TOLERANCE + 0.005);
     public static int TEMP_GAP = 5;
 
     public static String SVW = "11D915743";

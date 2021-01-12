@@ -88,10 +88,13 @@ public class TestThread extends Thread {
                     textFieldRt_R25.setText(ddf.format(proRecords.getR25()));
                     textFieldRw_R16.setText(ddf.format(proRecords.getR16()));
 
-                    double up = TestConstant.RESISTOR_EXP * (1 + TestConstant.RESISTOR_TOLERANCE);
-                    double low = TestConstant.RESISTOR_EXP * (1 - TestConstant.RESISTOR_TOLERANCE);
-                    if ((proRecords.getR25() < (up - 0.5) && proRecords.getR25() > (low + 0.5))
-                            && (proRecords.getR16() < up && proRecords.getR16() > low)) {
+                //    double up = TestConstant.RESISTOR_EXP * (1 + TestConstant.RESISTOR_TOLERANCE);
+                //    double low = TestConstant.RESISTOR_EXP * (1 - TestConstant.RESISTOR_TOLERANCE);
+                //    if ((proRecords.getR25() < (up - 0.5) && proRecords.getR25() > (low + 0.5))
+                //            && (proRecords.getR16() < up && proRecords.getR16() > low)) {
+                    /* 2020-12-10 修改内控参数 */
+                    if ((proRecords.getR25() < TestConstant.inup && proRecords.getR25() > TestConstant.inlow)
+                            && (proRecords.getR16() < TestConstant.up && proRecords.getR16() > TestConstant.low)) {
                         labelResultOne.setText("合格");
                         labelResultOne.setForeground(Color.green);
                     } else {
@@ -128,7 +131,7 @@ public class TestThread extends Thread {
 
                 // 显示二维码
                 if (null == proRecords || proRecords.getProCode() == null) {
-                    labelQRCode.setText("无检测数据");
+                    labelQRCode.setText("无二维码");
                     labelQRCode.setForeground(Color.orange);
 
                     logger.info("无二维码");
