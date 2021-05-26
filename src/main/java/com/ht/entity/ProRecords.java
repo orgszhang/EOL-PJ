@@ -1,9 +1,8 @@
 package com.ht.entity;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import net.bytebuddy.dynamic.loading.InjectionClassLoader;
+
+import javax.persistence.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -14,9 +13,14 @@ import java.util.Date;
 @Entity
 @Table(name = "prorecords")
 public class ProRecords {
+    /* 2021-02-27 以ID为主键*/
     @Id
-    @Column(name = "visual_part_number")
-    private String visualPartNumber;
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    @Column(name = "virtual_partnumber")
+    private String virtualPartNumber;
 
     @Column(name = "resistor_id")
     private String resistorID;   //
@@ -44,11 +48,11 @@ public class ProRecords {
 
 
     public void setVisualPartNumber(String visualPartNumber) {
-        this.visualPartNumber = visualPartNumber;
+        this.virtualPartNumber = visualPartNumber;
     }
 
     public String getVisualPartNumber() {
-        return this.visualPartNumber;
+        return this.virtualPartNumber;
     }
 
     public String getResistorID() {
@@ -136,7 +140,7 @@ public class ProRecords {
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");  // 2020-11-05 修正格式 S是毫秒
         return "ProRecords{" +
-                "visualPartNumber='" + visualPartNumber +
+                "visualPartNumber='" + virtualPartNumber +
                 "', ResistorID='" + resistorID +
                 "', R25=" + R25 +
                 ", R16=" + R16 +

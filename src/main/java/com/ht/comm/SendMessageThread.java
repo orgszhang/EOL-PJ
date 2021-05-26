@@ -96,7 +96,8 @@ class SendMessageThread extends Thread {
                                 ProRecords proRecords = null;
                                 try {
                                     ProRecordsRepo rRepo = SpringContext.getBean(ProRecordsRepo.class);
-                                    Optional<ProRecords> oneRow = rRepo.findById(params.getString("VirtualPartNumber"));
+                                    /* 2021-02-27 按ID存放数据后，这里不能findByID了 */
+                                    Optional<ProRecords> oneRow = rRepo.findByVirtualPartNumber(params.getString("VirtualPartNumber"));
                                     proRecords = oneRow.get();
                                     logger.info(proRecords.toString());
                                 } catch (Exception e) {

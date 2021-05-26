@@ -109,7 +109,7 @@ public class PrinterListener {
                     // }
                 }*/
             }
-        } catch (IOException e) {
+        } catch (Exception e) { /* 2021-05-26 抓所有异常，不仅是IOException */
             logger.warn("打码机打码发送信息错误" + e.getMessage());
             mDataView.append(DateUtil.formatInfo("打码机打码发送信息错误"));
             EolStatus.getInstance().setEolStatus("Error");

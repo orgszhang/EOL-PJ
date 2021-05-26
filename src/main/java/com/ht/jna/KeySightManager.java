@@ -147,7 +147,10 @@ public class KeySightManager {
 
         result.setTestTime(Calendar.getInstance().getTime());
 
-        logger.debug("ProRecords save: " + result.toString());
+        // 2021-02-27 过程数据不再存放到数据库
+        logger.debug(result.toString());
+
+        /*logger.debug("ProRecords save: " + result.toString());
         try {
             TestResultsRepo rRepo = SpringContext.getBean(TestResultsRepo.class);
             rRepo.save(result);
@@ -157,7 +160,7 @@ public class KeySightManager {
             if (production) {
                 EolStatus.getInstance().setEolStatus("Error");
             }
-        }
+        }*/
 
         return result;
     }
@@ -202,9 +205,11 @@ public class KeySightManager {
         logger.debug("开始测试零漂");
         while (times < TestConstant.ZEROV_TIMES) {
             zerov = testZeroV();
+            System.out.println("零漂检测结果：" + zerov[0] + " - " + zerov[1]);
             // if (Math.abs(zerov[0]) < TestConstant.ZEROV_TIMES || Math.abs(zerov[1]) < TestConstant.ZEROV_TIMES) {
             /* 2020-12-31 基于零漂上限检测；-1是因为检测设备自带1μ的误差 */
             if ((Math.abs(zerov[0]) - 1) < TestConstant.ZEROV_UPPER || (Math.abs(zerov[1]) - 1) < TestConstant.ZEROV_UPPER) {
+                System.out.println(zerov[0] + " - " + zerov[1]);
                 break;
             } else {
                 times++;
@@ -222,12 +227,16 @@ public class KeySightManager {
         NumberFormat ddf = NumberFormat.getNumberInstance();
         ddf.setMaximumFractionDigits(4);
         logger.debug("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV & 零漂16 = " + ddf.format(zerov[1] * 1000000) + "μV");
-        if (Math.abs(zerov[0]) < 10 * TestConstant.ZEROV_TIMES) {
+
+        /* 2021-05-26 零漂改成上界ZEROV_UPPER，之前错误使用的是ZEROV_TIMES */
+        // if (Math.abs(zerov[0]) < 10 * TestConstant.ZEROV_TIMES) { //errors
+        if (Math.abs(zerov[0]) <= TestConstant.ZEROV_UPPER) {
             mDataView.append(DateUtil.formatInfo("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV"));
         } else {
             mDataView.append(DateUtil.formatInfo("零漂25 = " + ddf.format(zerov[0] * 1000000) + "μV - 错误"));
         }
-        if (Math.abs(zerov[1]) < 10 * TestConstant.ZEROV_TIMES) {
+        // if (Math.abs(zerov[1]) < 10 * TestConstant.ZEROV_TIMES) { //errors
+        if (Math.abs(zerov[1]) <= 3 * TestConstant.ZEROV_UPPER) {
             mDataView.append(DateUtil.formatInfo("零漂16 = " + ddf.format(zerov[1] * 1000000) + "μV"));
         } else {
             mDataView.append(DateUtil.formatInfo("零漂16 = " + ddf.format(zerov[1] * 1000000) + "μV - 错误"));
@@ -236,7 +245,8 @@ public class KeySightManager {
         mDataView.setCaretPosition(mDataView.getText().length());
 
         /* 2020-11-05 判断条件：2-5脚小于3μV 且 1-6脚小于9μV */
-        if (Math.abs(zerov[0]) < TestConstant.ZEROV_TIMES && Math.abs(zerov[1]) < 3 * TestConstant.ZEROV_TIMES) {
+        /* 2021-05-26 零漂改成上界ZEROV_UPPER，之前错误使用的是ZEROV_TIMES */
+        if (Math.abs(zerov[0]) <= TestConstant.ZEROV_UPPER && Math.abs(zerov[1]) <= 3 * TestConstant.ZEROV_UPPER) {
             // 开电源
             TcpClient client = new TcpClient();
             client.open();
@@ -286,11 +296,16 @@ public class KeySightManager {
                 logger.warn(e);
             }
 
+            /* 2021-05-11 跟踪零件测试结果 */
+            logger.info("judgeResistor = " + judgeResistor + "; judgeNTC = " + judgeNTC + "; deltaR (<= 0.01) = " + t);
             if (judgeResistor && judgeNTC && t <= 0.01) {
                 thePart.setProCode(maintainQRCode(visualPartNumber, production));
             } else {
                 thePart.setProCode(null);
             }
+        } else {
+            /* 2021-05-11 跟踪零件测试结果 */
+            logger.info("2-5零漂 = " + Math.abs(zerov[0]) + "; 1-6零漂 = " + Math.abs(zerov[1]));
         }
 
         try {
